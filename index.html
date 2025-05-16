@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel File Parser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        input[type="file"] {
+            display: block;
+            margin: 20px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        #error {
+            color: red;
+            margin-top: 10px;
+        }
+        #download-link {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        #download-link a {
+            display: none;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        #download-link a:hover {
+            background-color: #45a049;
+        }
+        #files {
+            display: flex;
+            gap: 1em;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        #files div {
+            width: 50%;
+        }
+    </style>
+</head>
+<body>
+    <h1>KIR/KPR konverzija</h1>
+    <div id="files">
+        <div>
+            <h2>Knjiga prejetih računov</h2>
+            <input type="file" id="kprFile" accept=".xls,.xlsx">
+        </div>
+        <div>
+            <h2>Knjiga izdanih računov</h2>
+            <input type="file" id="kirFile" accept=".xls,.xlsx">
+        </div>
+    </div>
+    <div id="download-link">
+        <a id="downloadJson" href="#" download="KIR_KPR.json">Prenesi JSON za FURS</a>
+    </div>
+    <div id="error"></div>
+    <div id="output"></div>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
