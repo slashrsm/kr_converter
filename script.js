@@ -50,29 +50,90 @@ function parse_float(raw) {
     return data;
 }
 
-function parse_file(data, start_row) {
+function parse_kir(data) {
     var parsed_data = [];
     const workbook = XLSX.read(data, { type: 'array', cellDates: true });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
 
-    var row = start_row;
+    var row = 9;
     while (worksheet['A' + row]) {
         parsed_data.push({
-            zaporedna: parse_integer(worksheet['A' + row]),
-            datum_knjizenja: parse_date(worksheet['B' + row]),
-            stevilka_racuna: parse_integer(worksheet['C' + row]),
-            datum_racuna: parse_date(worksheet['D' + row]),
-            podjetje: parse_string(worksheet['E' + row]),
-            davcna: parse_string(worksheet['F' + row]),
-            vrednost_z_ddv: parse_float(worksheet['G' + row]),
-            izvoz_usa: parse_float(worksheet['H' + row]),
-            dobave_v_eu: parse_float(worksheet['I' + row]),
-            druge_oprostitve: parse_float(worksheet['J' + row]),
-            osnova_9_5: parse_float(worksheet['K' + row]),
-            ddv_9_5: parse_float(worksheet['L' + row]),
-            osnova_22: parse_float(worksheet['M' + row]),
-            ddv_22: parse_float(worksheet['N' + row]),
+            zaporedna: parse_integer(worksheet['A' + row]),             // ZAPST
+            datum_knjizenja: parse_date(worksheet['B' + row]),          // P2
+            stevilka_racuna: parse_integer(worksheet['C' + row]),       // P3
+            datum_racuna: parse_date(worksheet['D' + row]),             // P4
+            podjetje: parse_string(worksheet['E' + row]),               // P5
+            koda_drzave: parse_string(worksheet['F' + row]),            // P6
+            davcna: parse_string(worksheet['G' + row]),                 // P6DS
+            vrednost_brez_ddv: parse_float(worksheet['H' + row]),       // P7
+            ddv_prejemnik: parse_float(worksheet['I' + row]),           // P8
+            oproscene_dobave_slo: parse_float(worksheet['J' + row]),    // P9
+            oproscene_dobave_eu: parse_float(worksheet['K' + row]),     // P10
+            tristranske_dobave_eu: parse_float(worksheet['L' + row]),   // P11
+            prodaja_na_daljavo: parse_float(worksheet['M' + row]),      // P12
+            dobava_v_eu: parse_float(worksheet['N' + row]),             // P13
+            ddv_22: parse_float(worksheet['O' + row]),                  // P14
+            ddv_9: parse_float(worksheet['P' + row]),                   // P15
+            ddv_5: parse_float(worksheet['Q' + row]),                   // P16
+            prid_material_eu_22: parse_float(worksheet['R' + row]),     // P17
+            prid_storitve_eu_22: parse_float(worksheet['S' + row]),     // P18
+            prid_material_eu_9: parse_float(worksheet['T' + row]),      // P19
+            prid_storitve_eu_9: parse_float(worksheet['U' + row]),      // P20
+            prid_material_eu_5: parse_float(worksheet['V' + row]),      // P21
+            prid_storitve_eu_5: parse_float(worksheet['W' + row]),      // P22
+            samoob_22: parse_float(worksheet['X' + row]),               // P23
+            samoob_9: parse_float(worksheet['Y' + row]),                // P24
+            samoob_5: parse_float(worksheet['Z' + row]),                // P25
+            samoob_uvoz: parse_float(worksheet['AA' + row]),            // P26
+            dobave_zunaj_slo: parse_float(worksheet['AB' + row]),       // P27
+            opombe: parse_float(worksheet['AC' + row]),                 // P28
+            obdobje: parse_string(worksheet['N1']),                     // OBDOBJE
+            nacin: parse_string(worksheet['S1']),                       // OBRAVNAVA
+        });
+
+        row++;
+    }
+
+    parsed_data.sort((a, b) => a.zaporedna - b.zaporedna);
+    console.log(parsed_data);
+    return parsed_data;
+}
+
+function parse_kpr(data) {
+    var parsed_data = [];
+    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    var row = 10;
+    while (worksheet['A' + row]) {
+        parsed_data.push({
+            zaporedna: parse_integer(worksheet['A' + row]),             // ZAPST
+            datum_knjizenja: parse_date(worksheet['B' + row]),          // P2
+            stevilka_racuna: parse_integer(worksheet['C' + row]),       // P3
+            datum_prejema: parse_date(worksheet['D' + row]),            // P4
+            datum_racuna: parse_date(worksheet['E' + row]),             // P5
+            podjetje: parse_string(worksheet['F' + row]),               // P6
+            koda_drzave: parse_string(worksheet['G' + row]),            // P7
+            davcna: parse_string(worksheet['H' + row]),                 // P7DS
+            vrednost_brez_ddv: parse_float(worksheet['I' + row]),       // P8
+            ddv_obrac_prejem: parse_float(worksheet['J' + row]),        // P9
+            pridobitve_blaga_eu: parse_float(worksheet['K' + row]),     // P10
+            pridobitve_storitev_eu: parse_float(worksheet['L' + row]),  // P11
+            nepremicnine: parse_float(worksheet['M' + row]),            // P12
+            osnovna_sredstva: parse_float(worksheet['N' + row]),        // P13
+            oproscene_nabave: parse_float(worksheet['O' + row]),        // P14
+            oproscene_neprem: parse_float(worksheet['P' + row]),        // P15
+            oproscena_oprema: parse_float(worksheet['Q' + row]),        // P16
+            ne_obije: parse_float(worksheet['R' + row]),                // P17
+            ddv_22: parse_float(worksheet['S' + row]),                  // P18
+            ddv_9: parse_float(worksheet['T' + row]),                   // P19
+            ddv_5: parse_float(worksheet['U' + row]),                   // P20
+            pavsal_8: parse_float(worksheet['V' + row]),                // P21
+            opombe: parse_float(worksheet['W' + row]),                  // P22
+            obdobje: parse_string(worksheet['B1']),                     // OBDOBJE
+            nacin: parse_string(worksheet['D1']),                       // OBRAVNAVA
         });
 
         row++;
@@ -137,71 +198,66 @@ function generate_furs_json() {
     kir.forEach((row) => {
         furs_json.Lista_KIR.KIR.push({
             ZAPST: row.zaporedna.value,
-            OBDOBJE: "0123", // TODO
+            OBDOBJE: row.obdobje.value,
             P2: row.datum_knjizenja.value.toISOString(),
             P3: row.stevilka_racuna.value,
             P4: row.datum_racuna.value.toISOString(),
             P5: row.podjetje.value,
-            P6: "SI", // TODO
+            P6: row.koda_drzave.value,
             P6DS: row.davcna.value,
-            P7: 0.00, // TODO
-            P8: 0.00, // TODO
-            P9: 0.00, // TODO
-            P10: 0.00, // TODO
-            P11: 0.00, // TODO
-            P12: 0.00, // TODO
-            P13: 0.00, // TODO
-            P14: 0.00, // TODO
-            P15: 0.00, // TODO
-            P16: 0.00, // TODO
-            P17: 0.00, // TODO
-            P18: 0.00, // TODO
-            P19: 0.00, // TODO
-            P20: 0.00, // TODO
-            P21: 0.00, // TODO
-            P22: 0.00, // TODO
-            P23: 0.00, // TODO
-            P24: 0.00, // TODO
-            P25: 0.00, // TODO
-            P26: 0.00, // TODO
-            P27: 0.00, // TODO
-            P29: "Opombe", // TODO
-            OBRAVNAVA: 1, // TODO
-            OBDOBJE88: "01022024", // TODO
-            DAVEK88: 0.00, // TODO
+            P7: row.vrednost_brez_ddv.value,
+            P8: row.ddv_prejemnik.value,
+            P9: row.oproscene_dobave_slo.value,
+            P10: row.oproscene_dobave_eu.value,
+            P11: row.tristranske_dobave_eu.value,
+            P12: row.prodaja_na_daljavo.value,
+            P13: row.dobava_v_eu.value,
+            P14: row.ddv_22.value,
+            P15: row.ddv_9.value,
+            P16: row.ddv_5.value,
+            P17: row.prid_material_eu_22.value,
+            P18: row.prid_storitve_eu_22.value,
+            P19: row.prid_material_eu_9.value,
+            P20: row.prid_storitve_eu_9.value,
+            P21: row.prid_material_eu_5.value,
+            P22: row.prid_storitve_eu_5.value,
+            P23: row.samoob_22.value,
+            P24: row.samoob_9.value,
+            P25: row.samoob_5.value,
+            P26: row.samoob_uvoz.value,
+            P27: row.dobave_zunaj_slo.value,
+            P29: row.opombe.value,
+            OBRAVNAVA: row.nacin.value,
         });
     })
-
 
     kpr.forEach((row) => {
         furs_json.Lista_KPR.KPR.push({
             ZAPST: row.zaporedna.value,
-            OBDOBJE: "0123", // TODO
+            OBDOBJE: row.obdobje.value,
             P2: row.datum_knjizenja.value.toISOString(),
             P3: row.stevilka_racuna.value,
-            P4: "2024-06-01T00:00:00.0000001+02:00", // TODO
+            P4: row.datum_prejema.value.toISOString(),
             P5: row.datum_racuna.value.toISOString(),
             P6: row.podjetje.value,
-            P7: "SI", // TODO
+            P7: row.koda_drzave.value,
             P7DS: row.davcna.value,
-            P8: 0.00, // TODO
-            P9: 0.00, // TODO
-            P10: 0.00, // TODO
-            P11: 0.00, // TODO
-            P12: 0.00, // TODO
-            P13: 0.00, // TODO
-            P14: 0.00, // TODO
-            P15: 0.00, // TODO
-            P16: 0.00, // TODO
-            P17: 0.00, // TODO
-            P18: 0.00, // TODO
-            P19: 0.00, // TODO
-            P20: 0.00, // TODO
-            P21: 0.00, // TODO
-            P22: "Opombe", // TODO
-            OBRAVNAVA: 1, // TODO
-            OBDOBJE88: "01022024", // TODO
-            DAVEK88: 0.00, // TODO
+            P8: row.vrednost_brez_ddv.value,
+            P9: row.ddv_obrac_prejem.value,
+            P10: row.pridobitve_blaga_eu.value,
+            P11: row.pridobitve_storitev_eu.value,
+            P12: row.nepremicnine.value,
+            P13: row.osnovna_sredstva.value,
+            P14: row.oproscene_nabave.value,
+            P15: row.oproscene_neprem.value,
+            P16: row.oproscena_oprema.value,
+            P17: row.ne_obije.value,
+            P18: row.ddv_22.value,
+            P19: row.ddv_9.value,
+            P20: row.ddv_5.value,
+            P21: row.pavsal_8.value,
+            P22: row.opombe.value,
+            OBRAVNAVA: row.nacin.value,
         });
     })
 
@@ -226,7 +282,7 @@ kprFile.addEventListener('change', async (event) => {
 
     try {
         // Read and parse the file
-        kpr = parse_file(await event.target.files[0].arrayBuffer(), 10);
+        kpr = parse_kpr(await event.target.files[0].arrayBuffer());
         generate_furs_json();
     } catch (error) {
         errorDiv.textContent = 'Error parsing file: ' + error.message;
@@ -243,7 +299,7 @@ kirFile.addEventListener('change', async (event) => {
 
     try {
         // Read and parse the file
-        kir = parse_file(await event.target.files[0].arrayBuffer(), 9);
+        kir = parse_kir(await event.target.files[0].arrayBuffer());
         generate_furs_json();
 
 
