@@ -36,6 +36,44 @@ function formatDateToYM(input) {
     return `${year}${String(month).padStart(2, '0')}`;
 }
 
+function generateTable(data, inverted = false) {
+    const table = document.createElement('table');
+    if (inverted) {
+        for (var key in data) {
+            const tr = document.createElement('tr');
+            var td = document.createElement('th');
+            td.textContent = key ?? '';
+            tr.appendChild(td);
+            table.appendChild(tr);
+
+            var td = document.createElement('td');
+            td.textContent = data[key] ?? '';
+            tr.appendChild(td);
+            table.appendChild(tr);
+        }
+    } else {
+        data.forEach((row, index) => {
+            if (index === 0) {
+                const tr = document.createElement('tr');
+                for (var key in row) {
+                    const td = document.createElement('th');
+                    td.textContent = key ?? '';
+                    tr.appendChild(td);
+                }
+                table.appendChild(tr);
+            }
+            const tr = document.createElement('tr');
+            for (var key in row) {
+                const td = document.createElement('td');
+                td.textContent = row[key] ?? '';
+                tr.appendChild(td);
+            }
+            table.appendChild(tr);
+        });
+    }
+    return table;
+}
+
 function parse_simple_value(raw) {
     if (raw == undefined) {
         return {value: undefined, raw: undefined};
@@ -194,6 +232,7 @@ function generate_furs_json() {
     if (kir == undefined || kpr == undefined || davcnaStevilka.value.trim() == '' || obdobjeOd.value.trim() == '' || obdobjeDo.value.trim() == '') {
         downloadJson.style.display = 'none';
         downloadZip.style.display = 'none';
+        outputDiv.innerHTML = '';
         furs_json = undefined;
         return;
     }
@@ -311,6 +350,21 @@ function generate_furs_json() {
     downloadJson.href = URL.createObjectURL(blob);
     downloadJson.download = json_filename;
     downloadJson.style.display = 'inline-block';
+
+    // Create tables
+    outputDiv.innerHTML = '';    
+    var heading = document.createElement('h3');
+    heading.innerHTML = 'Glava';
+    outputDiv.appendChild(heading);
+    outputDiv.appendChild(generateTable(furs_json.Glava, true));
+    var heading = document.createElement('h3');
+    heading.innerHTML = 'Knjiga izdanih računov';
+    outputDiv.appendChild(heading);
+    outputDiv.appendChild(generateTable(furs_json.Lista_KIR.KIR));
+    var heading = document.createElement('h3');
+    heading.innerHTML = 'Knjiga prejetih računov';
+    outputDiv.appendChild(heading);
+    outputDiv.appendChild(generateTable(furs_json.Lista_KPR.KPR));
 }
 
 kprFile.addEventListener('change', async (event) => {
@@ -336,25 +390,6 @@ kirFile.addEventListener('change', async (event) => {
     try {
         kir = parse_kir(await event.target.files[0].arrayBuffer());
         generate_furs_json();
-        // Clear précédente output and errors
-        // errorDiv.textContent = '';
-        // outputDiv.innerHTML = '';
-
-        // Create table
-        // const table = document.createElement('table');
-        // jsonData.forEach((row, index) => {
-        //     const tr = document.createElement('tr');
-        //     row.forEach(cell => {
-        //         const cellElement = index === 0 ? 'th' : 'td';
-        //         const td = document.createElement(cellElement);
-        //         td.textContent = cell ?? '';
-        //         tr.appendChild(td);
-        //     });
-        //     table.appendChild(tr);
-        // });
-
-        // outputDiv.appendChild(table);
-
     } catch (error) {
         errorDiv.textContent = 'Error parsing file: ' + error.message;
         outputDiv.innerHTML = '';
