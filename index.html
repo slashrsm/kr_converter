@@ -64,6 +64,55 @@
 </head>
 <body>
     <h1>KIR/KPR konverzija</h1>
+    <div id="metadata" style="max-width: 400px; margin: 20px auto; font-family: Arial, sans-serif;">
+        <div style="margin-bottom: 15px;">
+            <label for="davcnaStevilka">Davčna številka zavezanca:*</label><br>
+            <input type="text" id="davcnaStevilka" name="davcnaStevilka" style="width: 100%; padding: 8px;" required>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label for="obdobjeOd">Obdobje od:*</label><br>
+            <input type="date" id="obdobjeOd" name="obdobjeOd" style="width: 100%; padding: 8px;" required>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label for="obdobjeDo">Obdobje do:*</label><br>
+            <input type="date" id="obdobjeDo" name="obdobjeDo" style="width: 100%; padding: 8px;" required>
+        </div>
+        <script>
+            // Set default dates for Obdobje od (first day of previous month) and Obdobje do (last day of previous month)
+            document.addEventListener('DOMContentLoaded', () => {
+                const today = new Date();
+                const prevMonthFirstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                const prevMonthLastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+                document.getElementById('obdobjeOd').value = prevMonthFirstDay.toISOString().split('T')[0];
+                document.getElementById('obdobjeDo').value = prevMonthLastDay.toISOString().split('T')[0];
+            });
+        </script>
+        <div style="margin-bottom: 15px;">
+            <label>
+                <input type="checkbox" id="zahtevamVracilo" name="zahtevamVracilo">
+                Zahtevam vračilo
+            </label>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label>
+                <input type="checkbox" id="izracunavamOdbitniDelez" name="izracunavamOdbitniDelez">
+                Izračunavam odbitni delež
+            </label>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label for="nacin">Način:</label><br>
+            <select id="nacin" name="nacin" style="width: 100%; padding: 8px;">
+                <option value="">-- Izberite možnost --</option>
+                <option value="1">1 - Samoprijava</option>
+                <option value="2">2 - Vloga za predložitev po roku</option>
+                <option value="3">3 - Ne bom uporabil instituta samoprijave</option>
+            </select>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label for="opomba">Opomba:</label><br>
+            <input type="text" id="opomba" name="opomba" style="width: 100%; padding: 8px;">
+        </div>
+    </div>
     <div id="files">
         <div>
             <h2>Knjiga prejetih računov</h2>

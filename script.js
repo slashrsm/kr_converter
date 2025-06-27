@@ -7,6 +7,14 @@ const outputDiv = document.getElementById('output');
 const errorDiv = document.getElementById('error');
 const downloadJson = document.getElementById('downloadJson');
 
+const davcnaStevilka = document.getElementById('davcnaStevilka');
+const zahtevamVracilo = document.getElementById('zahtevamVracilo');
+const izracunavamOdbitniDelez = document.getElementById('izracunavamOdbitniDelez');
+const nacin = document.getElementById('nacin');
+const opomba = document.getElementById('opomba');
+const obdobjeOd = document.getElementById('obdobjeOd');
+const obdobjeDo = document.getElementById('obdobjeDo');
+
 var kpr = undefined;
 var kir = undefined;
 var furs_json = undefined;
@@ -21,7 +29,6 @@ function parse_simple_value(raw) {
         raw: raw,
     }
 }
-
 
 function parse_integer(raw) {
     return parse_simple_value(raw);
@@ -166,26 +173,30 @@ function validate_file(event) {
 }
 
 function generate_furs_json() {
-    if (kir == undefined || kpr == undefined) {
-        return
+    // TODO validate tax id?
+    if (kir == undefined || kpr == undefined || davcnaStevilka.value.trim() == '' || obdobjeOd.value.trim() == '' || obdobjeDo.value.trim() == '') {
+        downloadJson.style.display = 'none';
+        furs_json = undefined;
+        return;
     }
 
     furs_json = {
-        // TODO put correct data into the metadata header.
         Glava: {
-            TaxPayerID: "12345678",
-            TUJEC1: "AB",
-            TUJEC2: "string",
-            OBDOBJE_OD: "2024-06-01T00:00:00.0000001+02:00",
-            OBDOBJE_DO: "2024-06-30T00:00:00.0000001+02:00",
-            KIR: "true",
-            KPR: "true",
-            VRACILO: "false",
-            ODBDELEZ: "false",
-            NACIN: 3,
-            INSPOS: "false",
-            PREDLODO: "false",
-            OPOMBA: "string"
+            TaxPayerID: davcnaStevilka.value.trim(),
+            // TODO do we need this?
+            //TUJEC1: "AB",
+            //TUJEC2: "string",
+            // TODO How can we only get this once?
+            OBDOBJE_OD: (new Date(obdobjeOd.value)).toISOString(),
+            OBDOBJE_DO: (new Date(obdobjeDo.value)).toISOString(),
+            // TODO se zgodi da je kateri prazen?
+            KIR: true,
+            KPR: true,
+            VRACILO: zahtevamVracilo.checked,
+            ODBDELEZ: izracunavamOdbitniDelez.checked,
+            INSPOS: false,
+            PREDLODO: false,
+            OPOMBA: opomba.value,
         },
         Lista_KIR: {
             KIR: []
@@ -194,6 +205,10 @@ function generate_furs_json() {
             KPR: []
         }
     };
+
+    if (nacin.value.trim() != '') {
+        furs_json.Glava.NACIN = nacin.value.trim();
+    }
 
     kir.forEach((row) => {
         furs_json.Lista_KIR.KIR.push({
@@ -267,12 +282,6 @@ function generate_furs_json() {
     const url = URL.createObjectURL(blob);
     downloadJson.href = url;
     downloadJson.style.display = 'inline-block';
-    // TODO name file using company name and period.
-
-    // Clean up URL after download
-    // downloadJson.addEventListener('click', () => {
-    //     setTimeout(() => URL.revokeObjectURL(url), 100);
-    // }, { once: true });
 }
 
 kprFile.addEventListener('change', async (event) => {
@@ -281,7 +290,6 @@ kprFile.addEventListener('change', async (event) => {
     }
 
     try {
-        // Read and parse the file
         kpr = parse_kpr(await event.target.files[0].arrayBuffer());
         generate_furs_json();
     } catch (error) {
@@ -291,19 +299,14 @@ kprFile.addEventListener('change', async (event) => {
     }
 });
 
-
 kirFile.addEventListener('change', async (event) => {
     if (!validate_file(event)) {
         return;
     }
 
     try {
-        // Read and parse the file
         kir = parse_kir(await event.target.files[0].arrayBuffer());
         generate_furs_json();
-
-
-
         // Clear précédente output and errors
         // errorDiv.textContent = '';
         // outputDiv.innerHTML = '';
@@ -328,4 +331,26 @@ kirFile.addEventListener('change', async (event) => {
         outputDiv.innerHTML = '';
         downloadJson.style.display = 'none';
     }
+});
+
+davcnaStevilka.addEventListener('change', async (event) => {
+    generate_furs_json();
+});
+zahtevamVracilo.addEventListener('change', async (event) => {
+    generate_furs_json();
+});
+izracunavamOdbitniDelez.addEventListener('change', async (event) => {
+    generate_furs_json();
+});
+nacin.addEventListener('change', async (event) => {
+    generate_furs_json();
+});
+opomba.addEventListener('change', async (event) => {
+    generate_furs_json();
+});
+obdobjeOd.addEventListener('change', async (event) => {
+    generate_furs_json();
+});
+obdobjeDo.addEventListener('change', async (event) => {
+    generate_furs_json();
 });
