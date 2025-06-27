@@ -19,6 +19,22 @@ var kpr = undefined;
 var kir = undefined;
 var furs_json = undefined;
 
+function formatDateToYM(input) {
+    if (!input) return 'N/A';
+    let year, month;
+    if (typeof input === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(input)) {
+        // Parse YYYY-MM-DD string directly
+        [year, month] = input.split('-').map(Number);
+    } else if (input instanceof Date && !isNaN(input)) {
+        // Use UTC to avoid local timezone shifts
+        year = input.getUTCFullYear();
+        month = input.getUTCMonth() + 1;
+    } else {
+        return 'N/A';
+    }
+    return `${year}${String(month).padStart(2, '0')}`;
+}
+
 function parse_simple_value(raw) {
     if (raw == undefined) {
         return {value: undefined, raw: undefined};
@@ -187,8 +203,8 @@ function generate_furs_json() {
             //TUJEC1: "AB",
             //TUJEC2: "string",
             // TODO How can we only get this once?
-            OBDOBJE_OD: (new Date(obdobjeOd.value)).toISOString(),
-            OBDOBJE_DO: (new Date(obdobjeDo.value)).toISOString(),
+            OBDOBJE_OD: obdobjeOd.valueAsDate.toISOString(),
+            OBDOBJE_DO: obdobjeDo.valueAsDate.toISOString(),
             // TODO se zgodi da je kateri prazen?
             KIR: true,
             KPR: true,
@@ -281,6 +297,7 @@ function generate_furs_json() {
     const blob = new Blob([jsonString], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     downloadJson.href = url;
+    downloadJson.download = `DDV_${davcnaStevilka.value.trim()}_${formatDateToYM(obdobjeOd.value)}_${formatDateToYM(obdobjeDo.value)}.json`;
     downloadJson.style.display = 'inline-block';
 }
 
