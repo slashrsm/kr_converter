@@ -1,5 +1,6 @@
 import { isDefaultClause, transpileModule, unescapeLeadingUnderscores } from 'typescript';
 import * as XLSX from 'xlsx';
+import JSZip from 'jszip';
 
 const kprFile = document.getElementById('kprFile');
 const kirFile = document.getElementById('kirFile');
@@ -192,6 +193,7 @@ function generate_furs_json() {
     // TODO validate tax id?
     if (kir == undefined || kpr == undefined || davcnaStevilka.value.trim() == '' || obdobjeOd.value.trim() == '' || obdobjeDo.value.trim() == '') {
         downloadJson.style.display = 'none';
+        downloadZip.style.display = 'none';
         furs_json = undefined;
         return;
     }
@@ -295,9 +297,19 @@ function generate_furs_json() {
     // Prepare JSON download
     const jsonString = JSON.stringify(furs_json, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    downloadJson.href = url;
-    downloadJson.download = `DDV_${davcnaStevilka.value.trim()}_${formatDateToYM(obdobjeOd.value)}_${formatDateToYM(obdobjeDo.value)}.json`;
+    const json_filename = `DDV_${davcnaStevilka.value.trim()}_${formatDateToYM(obdobjeOd.value)}_${formatDateToYM(obdobjeDo.value)}.json`;
+
+    // Create ZIP file
+    const zip = new JSZip();
+    zip.file(json_filename, jsonString);
+    zip.generateAsync({ type: 'blob' }).then(function(zipBlob) {
+        downloadZip.href = URL.createObjectURL(zipBlob);
+        downloadZip.download = `DDV_${davcnaStevilka.value.trim()}_${formatDateToYM(obdobjeOd.value)}_${formatDateToYM(obdobjeDo.value)}.zip`;
+        downloadZip.style.display = 'inline-block';
+    });
+
+    downloadJson.href = URL.createObjectURL(blob);
+    downloadJson.download = json_filename;
     downloadJson.style.display = 'inline-block';
 }
 
