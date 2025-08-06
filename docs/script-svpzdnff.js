@@ -1,4 +1,3 @@
-import { isDefaultClause, transpileModule, unescapeLeadingUnderscores } from 'typescript';
 import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
 
@@ -20,7 +19,7 @@ var kpr = undefined;
 var kir = undefined;
 var furs_json = undefined;
 
-var version = '"2025-08-06T17:30:53.699Z"';
+var version = '"2025-08-06T17:41:31.511Z"';
 var versionElement = document.getElementById('appVersion');
 versionElement.innerHTML = version;
 
