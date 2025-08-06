@@ -1,15 +1,14 @@
-await Bun.build({
+const result = await Bun.build({
   entrypoints: ["./index.html"],
   outdir: "./docs",
   target: "browser",
-  outfile: "index.html",
   plugins: [
     {
       name: "Application version string",
       setup(build) {
         const placeholder = "var version = 'development_version';";
 
-        build.onLoad({ filter: new RegExp(/script\.js/g) }, async (args) => {
+        build.onLoad({ filter: /script\.js/ }, async (args) => {
             try {
                 // Read the HTML file content
                 let contents = await Bun.file(args.path).text();
@@ -25,7 +24,7 @@ await Bun.build({
                 // Return the modified content
                 return {
                     contents,
-                    loader: 'file',
+                    loader: 'js',
                 };
             } catch (error) {
                 console.error('Error in version-inject plugin:', error.message);
@@ -36,3 +35,10 @@ await Bun.build({
     }
   ],
 });
+
+if (!result.success) {
+  console.error("Build failed:", result.logs);
+  process.exit(1);
+}
+
+console.log("Build succeeded");
