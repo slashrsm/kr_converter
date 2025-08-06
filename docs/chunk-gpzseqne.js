@@ -34694,7 +34694,7 @@ var obdobjeDo = document.getElementById("obdobjeDo");
 var kpr = undefined;
 var kir = undefined;
 var furs_json = undefined;
-var version2 = '"2025-08-06T18:04:29.328Z"';
+var version2 = "2025-08-06 14:16";
 var versionElement = document.getElementById("appVersion");
 versionElement.innerHTML = version2;
 function formatDateToYM(input) {

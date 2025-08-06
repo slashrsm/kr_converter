@@ -19,7 +19,14 @@ const result = await Bun.build({
                 }
 
                 // Replace placeholder with version tag
-                contents = contents.replace(placeholder, `var version = '"${(new Date()).toISOString()}"';`);
+                const date = new Date();
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const ts_string = `${year}-${month}-${day} ${hours}:${minutes}`;
+                contents = contents.replace(placeholder, `var version = '${ts_string}';`);
 
                 // Return the modified content
                 return {
