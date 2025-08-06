@@ -20,7 +20,7 @@ var kpr = undefined;
 var kir = undefined;
 var furs_json = undefined;
 
-var version = 'development_version';
+var version = '"2025-08-06T17:30:53.699Z"';
 var versionElement = document.getElementById('appVersion');
 versionElement.innerHTML = version;
 
