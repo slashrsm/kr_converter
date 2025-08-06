@@ -1,6 +1,6 @@
 const result = await Bun.build({
   entrypoints: ["./index.html"],
-  outdir: "./docs",
+  outdir: "./_site",
   target: "browser",
   plugins: [
     {
