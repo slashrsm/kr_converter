@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "start": "bun run --hot index.html",
-    "prod": "bun run build.js"
+    "prod": "bun install; bun run build.js"
   },
   "devDependencies": {
     "@types/bun": "latest"

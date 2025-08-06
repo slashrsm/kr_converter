@@ -32,7 +32,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Build with bun
-        run: bun install; bun build.js
+        run: bun prod
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
 
