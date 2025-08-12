@@ -1,17 +1,24 @@
-# excel-parser
+# KR converter
 
-https://grok.com/chat/64ff0818-d671-4de1-875b-06d50ab1016c
+## TODO
 
-To install dependencies:
+- Hide header section when ZIP was generated.
 
-```bash
-bun install
-```
 
-To run:
+## Vprasanja za petra
 
-```bash
-bun run index.ts
-```
+- Koda drzave - dve mesti
+- davcna stevilka iz Excela?
+- obdobje na vrstici vs. na dokumentu
+  - trenutno je eno obdobje na celo tabelo
+  - mozno ga je imet na vrstico
+- kako olajsati situacijo z obdobjem
+    - mogoce obdobje v excel?
+    - Mogoce cela glava?
+- En Excel, dva zvezka?
 
-This project was created using `bun init` in bun v1.2.13. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+- Ali se lahko kdaj zgodi da oddajas samo enega? (KIR ali KPR - trenutno je predpostavka da oddajas oba... mogoce je OK ce je prisoten, a prazen)
+- Tujec?
+- Samoprijava?
+- Insolvencni postopki
+- Predložitev na podlagi odločitve davčnega organa

@@ -37,6 +37,9 @@
         #download-link {
             max-width: 800px;
             margin: 0 auto;
+            display: flex;
+            gap: 1em;
+            justify-content: center;
         }
         #download-link a {
             display: none;
@@ -82,16 +85,6 @@
             <label for="obdobjeDo">Obdobje do:*</label><br>
             <input type="date" id="obdobjeDo" name="obdobjeDo" style="width: 100%; padding: 8px;" required>
         </div>
-        <script>
-            // Set default dates for Obdobje od (first day of previous month) and Obdobje do (last day of previous month)
-            document.addEventListener('DOMContentLoaded', () => {
-                const today = new Date();
-                const prevMonthFirstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-                const prevMonthLastDay = new Date(today.getFullYear(), today.getMonth(), 0);
-                document.getElementById('obdobjeOd').value = prevMonthFirstDay.toISOString().split('T')[0];
-                document.getElementById('obdobjeDo').value = prevMonthLastDay.toISOString().split('T')[0];
-            });
-        </script>
         <div style="margin-bottom: 15px;">
             <label>
                 <input type="checkbox" id="zahtevamVracilo" name="zahtevamVracilo">
@@ -130,7 +123,9 @@
     </div>
     <div id="download-link">
         <a id="downloadJson" href="#" download="KIR_KPR.json">Prenesi JSON za FURS</a>
+        <a id="downloadXml" href="#" download="KIR_KPR.xml">Prenesi XML za FURS</a>
         <a id="downloadZip" href="#" download="KIR_KPR.zip">Prenesi ZIP za FURS</a>
+        <a id="resetForm" href="#">Naloži nov dokument</a>
     </div>
     <div id="error"></div>
     <div id="output"></div>

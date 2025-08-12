@@ -7,6 +7,11 @@ const kirFile = document.getElementById('kirFile');
 const outputDiv = document.getElementById('output');
 const errorDiv = document.getElementById('error');
 const downloadJson = document.getElementById('downloadJson');
+const downloadXml = document.getElementById('downloadXml');
+const downloadZip = document.getElementById('downloadZip');
+const resetForm = document.getElementById('resetForm');
+const metadataDiv = document.getElementById('metadata');
+const filesDiv = document.getElementById('files');
 
 const davcnaStevilka = document.getElementById('davcnaStevilka');
 const zahtevamVracilo = document.getElementById('zahtevamVracilo');
@@ -18,7 +23,6 @@ const obdobjeDo = document.getElementById('obdobjeDo');
 
 var kpr = undefined;
 var kir = undefined;
-var furs_json = undefined;
 
 var version = 'development_version';
 var versionElement = document.getElementById('appVersion');
@@ -62,10 +66,18 @@ function generateTable(data, inverted = false) {
     return table;
 }
 
+function setDefaultDates() {
+    const today = new Date();
+    const prevMonthFirstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const prevMonthLastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+    document.getElementById('obdobjeOd').value = formatDate(prevMonthFirstDay, "yyyy-MM-dd");
+    document.getElementById('obdobjeDo').value = formatDate(prevMonthLastDay, "yyyy-MM-dd");
+}
+
 function parse_simple_value(raw) {
-    if (raw == undefined) {
+    if (!raw) {
         return {value: undefined, raw: undefined};
-    } 
+    }
 
     return {
         value: raw.v,
@@ -74,13 +86,23 @@ function parse_simple_value(raw) {
 }
 
 function parse_integer(raw) {
-    return parse_simple_value(raw);
+    if (!raw) {
+        return {value: 0, raw: 0};
+    }
+
+    var data = parse_simple_value(raw);
+    if (!data.value || (typeof data.value === "string" && !data.value.trim())) {
+        return {value: 0, raw: 0};
+    }
+
+    return data;
+
 }
 
 function parse_string(raw) {
-    if (raw == undefined) {
-        return {value: undefined, raw: undefined};
-    } 
+    if (!raw) {
+        return {value: '', raw: ''};
+    }
 
     return {
         value: raw.w,
@@ -93,10 +115,15 @@ function parse_date(raw) {
 }
 
 function parse_float(raw) {
-    var data = parse_integer(raw);
-    if (data.value == undefined) {
-        data.value = 0.0;
+    if (!raw) {
+        return {value: 0.0, raw: 0.0};
     }
+
+    var data = parse_simple_value(raw);
+    if (!data.value || (typeof data.value === "string" && !data.value.trim())) {
+        return {value: 0.0, raw: 0.0};
+    }
+
     return data;
 }
 
@@ -216,16 +243,9 @@ function validate_file(event) {
 }
 
 function generate_furs_json() {
-    // TODO validate tax id?
-    if (kir == undefined || kpr == undefined || davcnaStevilka.value.trim() == '' || obdobjeOd.value.trim() == '' || obdobjeDo.value.trim() == '') {
-        downloadJson.style.display = 'none';
-        downloadZip.style.display = 'none';
-        outputDiv.innerHTML = '';
-        furs_json = undefined;
-        return;
-    }
-
-    furs_json = {
+    // Note: This does not pass validation on eDavki and I can't figure out why. Keeping for
+    // historical reasons. We are using XML instead.
+    var furs_json = {
         Glava: {
             TaxPayerID: davcnaStevilka.value.trim(),
             // TODO do we need this?
@@ -234,7 +254,7 @@ function generate_furs_json() {
             // TODO How can we only get this once?
             OBDOBJE_OD: formatDate(obdobjeOd.valueAsDate, "yyyy-MM-dd"),
             OBDOBJE_DO: formatDate(obdobjeDo.valueAsDate, "yyyy-MM-dd"),
-            // TODO se zgodi da je kateri prazen?
+            // TODO se zgodi da je kateri od KIR/KPR prazen?
             KIR: true,
             KPR: true,
             VRACILO: zahtevamVracilo.checked,
@@ -321,38 +341,112 @@ function generate_furs_json() {
         });
     })
 
+    return furs_json;
+}
+
+function generate_furs_xml(export_data) {
+    const emptyValuesToOmit = [
+        '.DDV_KIR_KPR.Lista_KIR.KIR.P6',
+        '.DDV_KIR_KPR.Lista_KIR.KIR.P6DS',
+        '.DDV_KIR_KPR.Lista_KIR.KIR.P28',
+
+        '.DDV_KIR_KPR.Lista_KPR.KPR.P7',
+        '.DDV_KIR_KPR.Lista_KPR.KPR.P22',
+    ];
+
+    function convertToXML(data, parentTag, path = '', indent = '') {
+        let xml = '';
+
+        const parentTagOpen = parentTag === "DDV_KIR_KPR" ?
+            `DDV_KIR_KPR xmlns="http://edavki.durs.si/Documents/Schemas/DDV_KIR_KPR_1.xsd" xsi:schemaLocation="http://edavki.durs.si/Documents/Schemas/DDV_KIR_KPR_1.xsd schema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"` :
+            parentTag;
+
+        if (Array.isArray(data)) {
+            // Handle arrays
+            data.forEach(item => {
+                xml += convertToXML(item, parentTag, path, indent);
+            });
+        } else if (typeof data === 'object' && data !== null) {
+            // Handle objects
+            xml += `${indent}<${parentTagOpen}>\n`;
+            for (const [key, value] of Object.entries(data)) {
+                xml += convertToXML(value, key, path + '.' + parentTag, indent + '  ');
+            }
+            xml += `${indent}</${parentTag}>\n`;
+        } else {
+            if (
+                !emptyValuesToOmit.includes(path + '.' + parentTag) ||
+                (data && (typeof data.value === "string" && data.value.trim()))
+            ) {
+                xml += `${indent}<${parentTagOpen}>${data}</${parentTag}>\n`;
+            }
+        }
+
+        return xml;
+    }
+
+    // Start XML document
+    let xmlString = `<?xml version="1.0" encoding="utf-8"?>`;
+    xmlString += convertToXML(export_data, "DDV_KIR_KPR");
+
+    return xmlString;
+}
+
+function generate_furs_files() {
+    // TODO validate tax id?
+    if (kir == undefined || kpr == undefined || davcnaStevilka.value.trim() == '' || obdobjeOd.value.trim() == '' || obdobjeDo.value.trim() == '') {
+        downloadJson.style.display = 'none';
+        downloadXml.style.display = 'none';
+        downloadZip.style.display = 'none';
+        resetForm.style.display = 'none';
+        outputDiv.innerHTML = '';
+        return;
+    }
+
     // Prepare JSON download
-    const jsonString = JSON.stringify(furs_json, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const json_filename = `DDV_${davcnaStevilka.value.trim()}_${formatDate(obdobjeOd.value, "yyyyMM")}_${formatDate(obdobjeDo.value, "yyyyMM")}.json`;
+    const export_data = generate_furs_json();
+    const jsonString = JSON.stringify(export_data, null, 2);
+    const jsonBlob = new Blob([jsonString], { type: 'application/json' });
+    const jsonFilename = `DDV_${davcnaStevilka.value.trim()}_${formatDate(obdobjeOd.value, "yyyyMM")}_${formatDate(obdobjeDo.value, "yyyyMM")}.json`;
+
+    // Prepare XML download.
+    const xmlString = generate_furs_xml(export_data);
+    const xmlBlob = new Blob([xmlString], { type: 'application/xml' });
+    const xmlFilename = `DDV_${davcnaStevilka.value.trim()}_${formatDate(obdobjeOd.value, "yyyyMM")}_${formatDate(obdobjeDo.value, "yyyyMM")}.xml`;
 
     // Create ZIP file
     const zip = new JSZip();
-    zip.file(json_filename, jsonString);
+    zip.file(xmlFilename, xmlString);
     zip.generateAsync({ type: 'blob' }).then(function(zipBlob) {
         downloadZip.href = URL.createObjectURL(zipBlob);
         downloadZip.download = `DDV_${davcnaStevilka.value.trim()}_${formatDate(obdobjeOd.value, "yyyyMM")}_${formatDate(obdobjeDo.value, "yyyyMM")}.zip`;
         downloadZip.style.display = 'inline-block';
+        resetForm.style.display = 'inline-block';
     });
 
-    downloadJson.href = URL.createObjectURL(blob);
-    downloadJson.download = json_filename;
-    downloadJson.style.display = 'none';
+    downloadJson.href = URL.createObjectURL(jsonBlob);
+    downloadJson.download = jsonFilename;
+
+    downloadXml.href = URL.createObjectURL(xmlBlob);
+    downloadXml.download = xmlFilename;
 
     // Create tables
-    outputDiv.innerHTML = '';    
+    outputDiv.innerHTML = '';
     var heading = document.createElement('h3');
     heading.innerHTML = 'Glava';
     outputDiv.appendChild(heading);
-    outputDiv.appendChild(generateTable(furs_json.Glava, true));
+    outputDiv.appendChild(generateTable(export_data.Glava, true));
     var heading = document.createElement('h3');
     heading.innerHTML = 'Knjiga izdanih računov';
     outputDiv.appendChild(heading);
-    outputDiv.appendChild(generateTable(furs_json.Lista_KIR.KIR));
+    outputDiv.appendChild(generateTable(export_data.Lista_KIR.KIR));
     var heading = document.createElement('h3');
     heading.innerHTML = 'Knjiga prejetih računov';
     outputDiv.appendChild(heading);
-    outputDiv.appendChild(generateTable(furs_json.Lista_KPR.KPR));
+    outputDiv.appendChild(generateTable(export_data.Lista_KPR.KPR));
+
+    metadataDiv.style.display = 'none';
+    filesDiv.style.display = 'none';
 }
 
 kprFile.addEventListener('change', async (event) => {
@@ -362,7 +456,7 @@ kprFile.addEventListener('change', async (event) => {
 
     try {
         kpr = parse_kpr(await event.target.files[0].arrayBuffer());
-        generate_furs_json();
+        generate_furs_files();
     } catch (error) {
         errorDiv.textContent = 'Error parsing file: ' + error.message;
         outputDiv.innerHTML = '';
@@ -377,7 +471,7 @@ kirFile.addEventListener('change', async (event) => {
 
     try {
         kir = parse_kir(await event.target.files[0].arrayBuffer());
-        generate_furs_json();
+        generate_furs_files();
     } catch (error) {
         errorDiv.textContent = 'Error parsing file: ' + error.message;
         outputDiv.innerHTML = '';
@@ -385,24 +479,47 @@ kirFile.addEventListener('change', async (event) => {
     }
 });
 
+resetForm.addEventListener('click', async (_event) => {
+    downloadJson.style.display = 'none';
+    downloadXml.style.display = 'none';
+    downloadZip.style.display = 'none';
+    resetForm.style.display = 'none';
+    metadataDiv.style.display = 'block';
+    filesDiv.style.display = 'flex';
+    outputDiv.innerHTML = '';
+    setDefaultDates();
+    davcnaStevilka.value = '';
+    zahtevamVracilo.checked = false;
+    izracunavamOdbitniDelez.checked = false;
+    nacin.value = '';
+    opomba.value = '';
+    kprFile.value = '';
+    kirFile.value = '';
+    kir = undefined;
+    kpr = undefined;
+});
+
 davcnaStevilka.addEventListener('change', async (event) => {
-    generate_furs_json();
+    generate_furs_files();
 });
 zahtevamVracilo.addEventListener('change', async (event) => {
-    generate_furs_json();
+    generate_furs_files();
 });
 izracunavamOdbitniDelez.addEventListener('change', async (event) => {
-    generate_furs_json();
+    generate_furs_files();
 });
 nacin.addEventListener('change', async (event) => {
-    generate_furs_json();
+    generate_furs_files();
 });
 opomba.addEventListener('change', async (event) => {
-    generate_furs_json();
+    generate_furs_files();
 });
 obdobjeOd.addEventListener('change', async (event) => {
-    generate_furs_json();
+    generate_furs_files();
 });
 obdobjeDo.addEventListener('change', async (event) => {
-    generate_furs_json();
+    generate_furs_files();
 });
+
+// Set default dates for Obdobje od (first day of previous month) and Obdobje do (last day of previous month)
+document.addEventListener('DOMContentLoaded', setDefaultDates);
