@@ -165,6 +165,8 @@ function parse_kir(data) {
             samoob_uvoz: parse_float(worksheet['AA' + row]),            // P26
             dobave_zunaj_slo: parse_float(worksheet['AB' + row]),       // P27
             opombe: parse_string(worksheet['AC' + row]),                // P28
+            samoprijava_obdobje: parse_string(worksheet['AD' + row]),    // OBDOBJE88
+            samoprijava_davek: parse_string(worksheet['AE' + row]),      // DAVEK88
             obdobje: parse_string(worksheet['N1']),                     // OBDOBJE
             nacin: parse_string(worksheet['S1']),                       // OBRAVNAVA
         });
@@ -208,6 +210,8 @@ function parse_kpr(data) {
             ddv_5: parse_float(worksheet['U' + row]),                   // P20
             pavsal_8: parse_float(worksheet['V' + row]),                // P21
             opombe: parse_string(worksheet['W' + row]),                 // P22
+            samoprijava_obdobje: parse_string(worksheet['X' + row]),    // OBDOBJE88
+            samoprijava_davek: parse_string(worksheet['Y' + row]),      // DAVEK88
             obdobje: parse_string(worksheet['B1']),                     // OBDOBJE
             nacin: parse_string(worksheet['D1']),                       // OBRAVNAVA
         });
@@ -302,6 +306,8 @@ function generate_furs_json() {
                 P27: row.dobave_zunaj_slo.value,
                 P28: row.opombe.value,
                 OBRAVNAVA: row.nacin.value,
+                OBDOBJE88: row.samoprijava_obdobje.value,
+                DAVEK88: row.samoprijava_davek.value,
             });
         })
     }
@@ -336,6 +342,8 @@ function generate_furs_json() {
                 P21: row.pavsal_8.value,
                 P22: row.opombe.value,
                 OBRAVNAVA: row.nacin.value,
+                OBDOBJE88: row.samoprijava_obdobje.value,
+                DAVEK88: row.samoprijava_davek.value,
             });
         });
     }
@@ -348,9 +356,13 @@ function generate_furs_xml(export_data) {
         '.DDV_KIR_KPR.Lista_KIR.KIR.P6',
         '.DDV_KIR_KPR.Lista_KIR.KIR.P6DS',
         '.DDV_KIR_KPR.Lista_KIR.KIR.P28',
+        '.DDV_KIR_KPR.Lista_KIR.KIR.OBDOBJE88',
+        '.DDV_KIR_KPR.Lista_KIR.KIR.DAVEK88',
 
         '.DDV_KIR_KPR.Lista_KPR.KPR.P7',
         '.DDV_KIR_KPR.Lista_KPR.KPR.P22',
+        '.DDV_KIR_KPR.Lista_KPR.KPR.OBDOBJE88',
+        '.DDV_KIR_KPR.Lista_KPR.KPR.DAVEK88',
     ];
 
     function convertToXML(data, parentTag, path = '', indent = '') {

@@ -3,11 +3,14 @@
 ## TODO
 
 - Calculate obdobje from date of the document
+  - Can do it but I need to know if it is 1M or 3M
 - add samoprijava
+  - We need to define location of fields in Excel
 - add stecajni postopki, predlozitev na podlagi davcnega organa
 
-## Vprasanja za petra
+## Vprasanja za Petra
 
+- Nacin obravnave is global too
 - Koda drzave - dve mesti
 - davcna stevilka iz Excela?
 - obdobje na vrstici vs. na dokumentu
@@ -17,9 +20,3 @@
     - mogoce obdobje v excel?
     - Mogoce cela glava?
 - En Excel, dva zvezka?
-
-* Ali se lahko kdaj zgodi da oddajas samo enega? (KIR ali KPR - trenutno je predpostavka da oddajas oba... mogoce je OK ce je prisoten, a prazen)
-* Tujec?
-* Samoprijava?
-* Insolvencni postopki
-* Predložitev na podlagi odločitve davčnega organa
