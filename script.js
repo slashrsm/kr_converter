@@ -173,7 +173,6 @@ function parse_kir(data) {
     }
 
     parsed_data.sort((a, b) => a.zaporedna - b.zaporedna);
-    console.log(parsed_data);
     return parsed_data;
 }
 
@@ -217,7 +216,6 @@ function parse_kpr(data) {
     }
 
     parsed_data.sort((a, b) => a.zaporedna - b.zaporedna);
-    console.log(parsed_data);
     return parsed_data;
 }
 
@@ -254,92 +252,93 @@ function generate_furs_json() {
             // TODO How can we only get this once?
             OBDOBJE_OD: formatDate(obdobjeOd.valueAsDate, "yyyy-MM-dd"),
             OBDOBJE_DO: formatDate(obdobjeDo.valueAsDate, "yyyy-MM-dd"),
-            // TODO se zgodi da je kateri od KIR/KPR prazen?
-            KIR: true,
-            KPR: true,
+            KIR: kir.length > 0,
+            KPR: kpr.length > 0,
             VRACILO: zahtevamVracilo.checked,
             ODBDELEZ: izracunavamOdbitniDelez.checked,
             INSPOS: false,
             PREDLODO: false,
             OPOMBA: opomba.value,
         },
-        Lista_KIR: {
-            KIR: []
-        },
-        Lista_KPR: {
-            KPR: []
-        }
     };
 
     if (nacin.value.trim() != '') {
         furs_json.Glava.NACIN = nacin.value.trim();
     }
 
-    kir.forEach((row) => {
-        furs_json.Lista_KIR.KIR.push({
-            ZAPST: row.zaporedna.value,
-            OBDOBJE: row.obdobje.value,
-            P2: formatDate(row.datum_knjizenja.value, "yyyy-MM-dd"),
-            P3: row.stevilka_racuna.value,
-            P4: formatDate(row.datum_racuna.value, "yyyy-MM-dd"),
-            P5: row.podjetje.value,
-            P6: row.koda_drzave.value,
-            P6DS: row.davcna.value,
-            P7: row.vrednost_brez_ddv.value,
-            P8: row.ddv_prejemnik.value,
-            P9: row.oproscene_dobave_slo.value,
-            P10: row.oproscene_dobave_eu.value,
-            P11: row.tristranske_dobave_eu.value,
-            P12: row.prodaja_na_daljavo.value,
-            P13: row.dobava_v_eu.value,
-            P14: row.ddv_22.value,
-            P15: row.ddv_9.value,
-            P16: row.ddv_5.value,
-            P17: row.prid_material_eu_22.value,
-            P18: row.prid_storitve_eu_22.value,
-            P19: row.prid_material_eu_9.value,
-            P20: row.prid_storitve_eu_9.value,
-            P21: row.prid_material_eu_5.value,
-            P22: row.prid_storitve_eu_5.value,
-            P23: row.samoob_22.value,
-            P24: row.samoob_9.value,
-            P25: row.samoob_5.value,
-            P26: row.samoob_uvoz.value,
-            P27: row.dobave_zunaj_slo.value,
-            P28: row.opombe.value,
-            OBRAVNAVA: row.nacin.value,
-        });
-    })
+    if (kir.length > 0) {
+        furs_json.Lista_KIR = {};
+        furs_json.Lista_KIR.KIR = [];
+        kir.forEach((row) => {
+            furs_json.Lista_KIR.KIR.push({
+                ZAPST: row.zaporedna.value,
+                OBDOBJE: row.obdobje.value,
+                P2: formatDate(row.datum_knjizenja.value, "yyyy-MM-dd"),
+                P3: row.stevilka_racuna.value,
+                P4: formatDate(row.datum_racuna.value, "yyyy-MM-dd"),
+                P5: row.podjetje.value,
+                P6: row.koda_drzave.value,
+                P6DS: row.davcna.value,
+                P7: row.vrednost_brez_ddv.value,
+                P8: row.ddv_prejemnik.value,
+                P9: row.oproscene_dobave_slo.value,
+                P10: row.oproscene_dobave_eu.value,
+                P11: row.tristranske_dobave_eu.value,
+                P12: row.prodaja_na_daljavo.value,
+                P13: row.dobava_v_eu.value,
+                P14: row.ddv_22.value,
+                P15: row.ddv_9.value,
+                P16: row.ddv_5.value,
+                P17: row.prid_material_eu_22.value,
+                P18: row.prid_storitve_eu_22.value,
+                P19: row.prid_material_eu_9.value,
+                P20: row.prid_storitve_eu_9.value,
+                P21: row.prid_material_eu_5.value,
+                P22: row.prid_storitve_eu_5.value,
+                P23: row.samoob_22.value,
+                P24: row.samoob_9.value,
+                P25: row.samoob_5.value,
+                P26: row.samoob_uvoz.value,
+                P27: row.dobave_zunaj_slo.value,
+                P28: row.opombe.value,
+                OBRAVNAVA: row.nacin.value,
+            });
+        })
+    }
 
-    kpr.forEach((row) => {
-        furs_json.Lista_KPR.KPR.push({
-            ZAPST: row.zaporedna.value,
-            OBDOBJE: row.obdobje.value,
-            P2: formatDate(row.datum_knjizenja.value, "yyyy-MM-dd"),
-            P3: row.stevilka_racuna.value,
-            P4: formatDate(row.datum_prejema.value, "yyyy-MM-dd"),
-            P5: formatDate(row.datum_racuna.value, "yyyy-MM-dd"),
-            P6: row.podjetje.value,
-            P7: row.koda_drzave.value,
-            P7DS: row.davcna.value,
-            P8: row.vrednost_brez_ddv.value,
-            P9: row.ddv_obrac_prejem.value,
-            P10: row.pridobitve_blaga_eu.value,
-            P11: row.pridobitve_storitev_eu.value,
-            P12: row.nepremicnine.value,
-            P13: row.osnovna_sredstva.value,
-            P14: row.oproscene_nabave.value,
-            P15: row.oproscene_neprem.value,
-            P16: row.oproscena_oprema.value,
-            P17: row.ne_obije.value,
-            P18: row.ddv_22.value,
-            P19: row.ddv_9.value,
-            P20: row.ddv_5.value,
-            P21: row.pavsal_8.value,
-            P22: row.opombe.value,
-            OBRAVNAVA: row.nacin.value,
+    if (kpr.length > 0) {
+        furs_json.Lista_KPR = {};
+        furs_json.Lista_KPR.KPR = [];
+        kpr.forEach((row) => {
+            furs_json.Lista_KPR.KPR.push({
+                ZAPST: row.zaporedna.value,
+                OBDOBJE: row.obdobje.value,
+                P2: formatDate(row.datum_knjizenja.value, "yyyy-MM-dd"),
+                P3: row.stevilka_racuna.value,
+                P4: formatDate(row.datum_prejema.value, "yyyy-MM-dd"),
+                P5: formatDate(row.datum_racuna.value, "yyyy-MM-dd"),
+                P6: row.podjetje.value,
+                P7: row.koda_drzave.value,
+                P7DS: row.davcna.value,
+                P8: row.vrednost_brez_ddv.value,
+                P9: row.ddv_obrac_prejem.value,
+                P10: row.pridobitve_blaga_eu.value,
+                P11: row.pridobitve_storitev_eu.value,
+                P12: row.nepremicnine.value,
+                P13: row.osnovna_sredstva.value,
+                P14: row.oproscene_nabave.value,
+                P15: row.oproscene_neprem.value,
+                P16: row.oproscena_oprema.value,
+                P17: row.ne_obije.value,
+                P18: row.ddv_22.value,
+                P19: row.ddv_9.value,
+                P20: row.ddv_5.value,
+                P21: row.pavsal_8.value,
+                P22: row.opombe.value,
+                OBRAVNAVA: row.nacin.value,
+            });
         });
-    })
+    }
 
     return furs_json;
 }
@@ -439,11 +438,15 @@ function generate_furs_files() {
     var heading = document.createElement('h3');
     heading.innerHTML = 'Knjiga izdanih računov';
     outputDiv.appendChild(heading);
-    outputDiv.appendChild(generateTable(export_data.Lista_KIR.KIR));
+    if ('Lista_KIR' in export_data) {
+        outputDiv.appendChild(generateTable(export_data.Lista_KIR.KIR));
+    }
     var heading = document.createElement('h3');
     heading.innerHTML = 'Knjiga prejetih računov';
     outputDiv.appendChild(heading);
-    outputDiv.appendChild(generateTable(export_data.Lista_KPR.KPR));
+    if ('Lista_KPR' in export_data) {
+        outputDiv.appendChild(generateTable(export_data.Lista_KPR.KPR));
+    }
 
     metadataDiv.style.display = 'none';
     filesDiv.style.display = 'none';

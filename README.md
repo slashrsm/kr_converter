@@ -2,8 +2,9 @@
 
 ## TODO
 
-- Hide header section when ZIP was generated.
-
+- Calculate obdobje from date of the document
+- add samoprijava
+- add stecajni postopki, predlozitev na podlagi davcnega organa
 
 ## Vprasanja za petra
 
@@ -17,8 +18,8 @@
     - Mogoce cela glava?
 - En Excel, dva zvezka?
 
-- Ali se lahko kdaj zgodi da oddajas samo enega? (KIR ali KPR - trenutno je predpostavka da oddajas oba... mogoce je OK ce je prisoten, a prazen)
-- Tujec?
-- Samoprijava?
-- Insolvencni postopki
-- Predložitev na podlagi odločitve davčnega organa
+* Ali se lahko kdaj zgodi da oddajas samo enega? (KIR ali KPR - trenutno je predpostavka da oddajas oba... mogoce je OK ce je prisoten, a prazen)
+* Tujec?
+* Samoprijava?
+* Insolvencni postopki
+* Predložitev na podlagi odločitve davčnega organa
