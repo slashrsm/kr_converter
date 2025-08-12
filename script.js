@@ -152,7 +152,7 @@ function parse_kir(data) {
             samoob_5: parse_float(worksheet['Z' + row]),                // P25
             samoob_uvoz: parse_float(worksheet['AA' + row]),            // P26
             dobave_zunaj_slo: parse_float(worksheet['AB' + row]),       // P27
-            opombe: parse_float(worksheet['AC' + row]),                 // P28
+            opombe: parse_string(worksheet['AC' + row]),                // P28
             obdobje: parse_string(worksheet['N1']),                     // OBDOBJE
             nacin: parse_string(worksheet['S1']),                       // OBRAVNAVA
         });
@@ -196,7 +196,7 @@ function parse_kpr(data) {
             ddv_9: parse_float(worksheet['T' + row]),                   // P19
             ddv_5: parse_float(worksheet['U' + row]),                   // P20
             pavsal_8: parse_float(worksheet['V' + row]),                // P21
-            opombe: parse_float(worksheet['W' + row]),                  // P22
+            opombe: parse_string(worksheet['W' + row]),                 // P22
             obdobje: parse_string(worksheet['B1']),                     // OBDOBJE
             nacin: parse_string(worksheet['D1']),                       // OBRAVNAVA
         });
@@ -301,7 +301,7 @@ function generate_furs_json() {
             P25: row.samoob_5.value,
             P26: row.samoob_uvoz.value,
             P27: row.dobave_zunaj_slo.value,
-            P29: row.opombe.value,
+            P28: row.opombe.value,
             OBRAVNAVA: row.nacin.value,
         });
     })
@@ -352,7 +352,7 @@ function generate_furs_json() {
 
     downloadJson.href = URL.createObjectURL(blob);
     downloadJson.download = json_filename;
-    downloadJson.style.display = 'inline-block';
+    downloadJson.style.display = 'none';
 
     // Create tables
     outputDiv.innerHTML = '';    
