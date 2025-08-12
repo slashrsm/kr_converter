@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
+import { format as formatDate } from "date-fns";
 
 const kprFile = document.getElementById('kprFile');
 const kirFile = document.getElementById('kirFile');
@@ -22,22 +23,6 @@ var furs_json = undefined;
 var version = 'development_version';
 var versionElement = document.getElementById('appVersion');
 versionElement.innerHTML = version;
-
-function formatDateToYM(input) {
-    if (!input) return 'N/A';
-    let year, month;
-    if (typeof input === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(input)) {
-        // Parse YYYY-MM-DD string directly
-        [year, month] = input.split('-').map(Number);
-    } else if (input instanceof Date && !isNaN(input)) {
-        // Use UTC to avoid local timezone shifts
-        year = input.getUTCFullYear();
-        month = input.getUTCMonth() + 1;
-    } else {
-        return 'N/A';
-    }
-    return `${year}${String(month).padStart(2, '0')}`;
-}
 
 function generateTable(data, inverted = false) {
     const table = document.createElement('table');
@@ -247,8 +232,8 @@ function generate_furs_json() {
             //TUJEC1: "AB",
             //TUJEC2: "string",
             // TODO How can we only get this once?
-            OBDOBJE_OD: obdobjeOd.valueAsDate.toISOString(),
-            OBDOBJE_DO: obdobjeDo.valueAsDate.toISOString(),
+            OBDOBJE_OD: formatDate(obdobjeOd.valueAsDate, "yyyy-MM-dd"),
+            OBDOBJE_DO: formatDate(obdobjeDo.valueAsDate, "yyyy-MM-dd"),
             // TODO se zgodi da je kateri prazen?
             KIR: true,
             KPR: true,
@@ -274,9 +259,9 @@ function generate_furs_json() {
         furs_json.Lista_KIR.KIR.push({
             ZAPST: row.zaporedna.value,
             OBDOBJE: row.obdobje.value,
-            P2: row.datum_knjizenja.value.toISOString(),
+            P2: formatDate(row.datum_knjizenja.value, "yyyy-MM-dd"),
             P3: row.stevilka_racuna.value,
-            P4: row.datum_racuna.value.toISOString(),
+            P4: formatDate(row.datum_racuna.value, "yyyy-MM-dd"),
             P5: row.podjetje.value,
             P6: row.koda_drzave.value,
             P6DS: row.davcna.value,
@@ -310,10 +295,10 @@ function generate_furs_json() {
         furs_json.Lista_KPR.KPR.push({
             ZAPST: row.zaporedna.value,
             OBDOBJE: row.obdobje.value,
-            P2: row.datum_knjizenja.value.toISOString(),
+            P2: formatDate(row.datum_knjizenja.value, "yyyy-MM-dd"),
             P3: row.stevilka_racuna.value,
-            P4: row.datum_prejema.value.toISOString(),
-            P5: row.datum_racuna.value.toISOString(),
+            P4: formatDate(row.datum_prejema.value, "yyyy-MM-dd"),
+            P5: formatDate(row.datum_racuna.value, "yyyy-MM-dd"),
             P6: row.podjetje.value,
             P7: row.koda_drzave.value,
             P7DS: row.davcna.value,
@@ -339,14 +324,14 @@ function generate_furs_json() {
     // Prepare JSON download
     const jsonString = JSON.stringify(furs_json, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
-    const json_filename = `DDV_${davcnaStevilka.value.trim()}_${formatDateToYM(obdobjeOd.value)}_${formatDateToYM(obdobjeDo.value)}.json`;
+    const json_filename = `DDV_${davcnaStevilka.value.trim()}_${formatDate(obdobjeOd.value, "yyyyMM")}_${formatDate(obdobjeDo.value, "yyyyMM")}.json`;
 
     // Create ZIP file
     const zip = new JSZip();
     zip.file(json_filename, jsonString);
     zip.generateAsync({ type: 'blob' }).then(function(zipBlob) {
         downloadZip.href = URL.createObjectURL(zipBlob);
-        downloadZip.download = `DDV_${davcnaStevilka.value.trim()}_${formatDateToYM(obdobjeOd.value)}_${formatDateToYM(obdobjeDo.value)}.zip`;
+        downloadZip.download = `DDV_${davcnaStevilka.value.trim()}_${formatDate(obdobjeOd.value, "yyyyMM")}_${formatDate(obdobjeDo.value, "yyyyMM")}.zip`;
         downloadZip.style.display = 'inline-block';
     });
 
