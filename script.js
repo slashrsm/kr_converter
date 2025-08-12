@@ -16,6 +16,8 @@ const filesDiv = document.getElementById('files');
 const davcnaStevilka = document.getElementById('davcnaStevilka');
 const zahtevamVracilo = document.getElementById('zahtevamVracilo');
 const izracunavamOdbitniDelez = document.getElementById('izracunavamOdbitniDelez');
+const insolventniPostopek = document.getElementById('insolventniPostopek');
+const odlocitevFu = document.getElementById('odlocitevFu');
 const nacin = document.getElementById('nacin');
 const opomba = document.getElementById('opomba');
 const obdobjeOd = document.getElementById('obdobjeOd');
@@ -260,8 +262,8 @@ function generate_furs_json() {
             KPR: kpr.length > 0,
             VRACILO: zahtevamVracilo.checked,
             ODBDELEZ: izracunavamOdbitniDelez.checked,
-            INSPOS: false,
-            PREDLODO: false,
+            INSPOS: insolventniPostopek.checked,
+            PREDLODO: odlocitevFu.checked,
             OPOMBA: opomba.value,
         },
     };
@@ -506,6 +508,8 @@ resetForm.addEventListener('click', async (_event) => {
     davcnaStevilka.value = '';
     zahtevamVracilo.checked = false;
     izracunavamOdbitniDelez.checked = false;
+    insolventniPostopek.checked = false;
+    odlocitevFu.checked = false;
     nacin.value = '';
     opomba.value = '';
     kprFile.value = '';
@@ -514,27 +518,15 @@ resetForm.addEventListener('click', async (_event) => {
     kpr = undefined;
 });
 
-davcnaStevilka.addEventListener('change', async (event) => {
-    generate_furs_files();
-});
-zahtevamVracilo.addEventListener('change', async (event) => {
-    generate_furs_files();
-});
-izracunavamOdbitniDelez.addEventListener('change', async (event) => {
-    generate_furs_files();
-});
-nacin.addEventListener('change', async (event) => {
-    generate_furs_files();
-});
-opomba.addEventListener('change', async (event) => {
-    generate_furs_files();
-});
-obdobjeOd.addEventListener('change', async (event) => {
-    generate_furs_files();
-});
-obdobjeDo.addEventListener('change', async (event) => {
-    generate_furs_files();
-});
+davcnaStevilka.addEventListener('change', generate_furs_files);
+zahtevamVracilo.addEventListener('change', generate_furs_files);
+izracunavamOdbitniDelez.addEventListener('change', generate_furs_files);
+insolventniPostopek.addEventListener('change', generate_furs_files);
+odlocitevFu.addEventListener('change', generate_furs_files);
+nacin.addEventListener('change', generate_furs_files);
+opomba.addEventListener('change', generate_furs_files);
+obdobjeOd.addEventListener('change', generate_furs_files);
+obdobjeDo.addEventListener('change', generate_furs_files);
 
 // Set default dates for Obdobje od (first day of previous month) and Obdobje do (last day of previous month)
 document.addEventListener('DOMContentLoaded', setDefaultDates);

@@ -6,7 +6,6 @@
   - Can do it but I need to know if it is 1M or 3M
 - add samoprijava
   - We need to define location of fields in Excel
-- add stecajni postopki, predlozitev na podlagi davcnega organa
 
 ## Vprasanja za Petra
 
