@@ -126,7 +126,10 @@ function parse_float(raw) {
         return {value: 0.0, raw: 0.0};
     }
 
-    return data;
+    return {
+        value: data.value.toFixed(2),
+        raw: data.raw,
+    }
 }
 
 function parse_kir(data) {
