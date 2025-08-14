@@ -533,3 +533,21 @@ obdobjeDo.addEventListener('change', generate_furs_files);
 
 // Set default dates for Obdobje od (first day of previous month) and Obdobje do (last day of previous month)
 document.addEventListener('DOMContentLoaded', setDefaultDates);
+
+
+document.getElementById('ajax').addEventListener('click', (event) => {
+    event.preventDefault();
+    fetch('https://beta.edavki.durs.si/InvoiceBookService/api/v1/Auth/Certificate/Representing/DS/2', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+        },
+        credentials: 'include', // For browser to prompt for the cert.
+    })
+    .then(response => {
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        return response.json();
+    })
+    .then(data => console.log(data))
+    .catch(error => console.error('Error:', error));
+});
