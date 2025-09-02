@@ -2,29 +2,14 @@ import * as XLSX from 'xlsx';
 import JSZip from 'jszip';
 import { format as formatDate } from "date-fns";
 
-const kprFile = document.getElementById('kprFile');
-const kirFile = document.getElementById('kirFile');
+const excelFile = document.getElementById('excelFile');
 const outputDiv = document.getElementById('output');
 const errorDiv = document.getElementById('error');
 const downloadJson = document.getElementById('downloadJson');
 const downloadXml = document.getElementById('downloadXml');
 const downloadZip = document.getElementById('downloadZip');
 const resetForm = document.getElementById('resetForm');
-const metadataDiv = document.getElementById('metadata');
 const filesDiv = document.getElementById('files');
-
-const davcnaStevilka = document.getElementById('davcnaStevilka');
-const zahtevamVracilo = document.getElementById('zahtevamVracilo');
-const izracunavamOdbitniDelez = document.getElementById('izracunavamOdbitniDelez');
-const insolventniPostopek = document.getElementById('insolventniPostopek');
-const odlocitevFu = document.getElementById('odlocitevFu');
-const nacin = document.getElementById('nacin');
-const opomba = document.getElementById('opomba');
-const obdobjeOd = document.getElementById('obdobjeOd');
-const obdobjeDo = document.getElementById('obdobjeDo');
-
-var kpr = undefined;
-var kir = undefined;
 
 var version = 'development_version';
 var versionElement = document.getElementById('appVersion');
@@ -66,14 +51,6 @@ function generateTable(data, inverted = false) {
         });
     }
     return table;
-}
-
-function setDefaultDates() {
-    const today = new Date();
-    const prevMonthFirstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    const prevMonthLastDay = new Date(today.getFullYear(), today.getMonth(), 0);
-    document.getElementById('obdobjeOd').value = formatDate(prevMonthFirstDay, "yyyy-MM-dd");
-    document.getElementById('obdobjeDo').value = formatDate(prevMonthLastDay, "yyyy-MM-dd");
 }
 
 function parse_simple_value(raw) {
@@ -132,11 +109,56 @@ function parse_float(raw) {
     }
 }
 
+function parse_boolean(raw) {
+    var data = parse_simple_value(raw);
+    if (!data.value) {
+        return {value: false, raw: false};
+    }
+
+    return {
+        value: data.value === 'DA',
+        raw: data.value === 'DA',
+    }
+}
+
+function parse_method(raw) {
+    var data = parse_simple_value(raw);
+    if (!data.value) {
+        return {value: null, raw: null};
+    }
+
+    const matches = data.value.match(/(?<method>\d) - /);
+    if (matches) {
+        return {
+            value: matches.groups.method,
+            raw: matches.groups.method,
+        }
+    }
+
+    return {value: null, raw: null}
+}
+
+function parse_header(data) {
+    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+    const worksheet = workbook.Sheets['Glava'];
+    return {
+        davcnaStevilka: parse_string(worksheet['B2']),
+        obdobjeOd: parse_date(worksheet['B3']),
+        obdobjeDo: parse_date(worksheet['B4']),
+        vracilo: parse_boolean(worksheet['B5']),
+        odbitniDelez: parse_boolean(worksheet['B6']),
+        insolventniPostopek: parse_boolean(worksheet['B7']),
+        odlocbaFurs: parse_boolean(worksheet['B8']),
+        nacin: parse_method(worksheet['B9']),
+        opomba: parse_string(worksheet['B10']),
+    };
+}
+
+
 function parse_kir(data) {
     var parsed_data = [];
     const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
+    const worksheet = workbook.Sheets['KIR'];
 
     var row = 9;
     while (worksheet['A' + row]) {
@@ -145,35 +167,35 @@ function parse_kir(data) {
             datum_knjizenja: parse_date(worksheet['B' + row]),          // P2
             stevilka_racuna: parse_integer(worksheet['C' + row]),       // P3
             datum_racuna: parse_date(worksheet['D' + row]),             // P4
-            podjetje: parse_string(worksheet['E' + row]),               // P5
-            koda_drzave: parse_string(worksheet['F' + row]),            // P6
-            davcna: parse_string(worksheet['G' + row]),                 // P6DS
-            vrednost_brez_ddv: parse_float(worksheet['H' + row]),       // P7
-            ddv_prejemnik: parse_float(worksheet['I' + row]),           // P8
-            oproscene_dobave_slo: parse_float(worksheet['J' + row]),    // P9
-            oproscene_dobave_eu: parse_float(worksheet['K' + row]),     // P10
-            tristranske_dobave_eu: parse_float(worksheet['L' + row]),   // P11
-            prodaja_na_daljavo: parse_float(worksheet['M' + row]),      // P12
-            dobava_v_eu: parse_float(worksheet['N' + row]),             // P13
-            ddv_22: parse_float(worksheet['O' + row]),                  // P14
-            ddv_9: parse_float(worksheet['P' + row]),                   // P15
-            ddv_5: parse_float(worksheet['Q' + row]),                   // P16
-            prid_material_eu_22: parse_float(worksheet['R' + row]),     // P17
-            prid_storitve_eu_22: parse_float(worksheet['S' + row]),     // P18
-            prid_material_eu_9: parse_float(worksheet['T' + row]),      // P19
-            prid_storitve_eu_9: parse_float(worksheet['U' + row]),      // P20
-            prid_material_eu_5: parse_float(worksheet['V' + row]),      // P21
-            prid_storitve_eu_5: parse_float(worksheet['W' + row]),      // P22
-            samoob_22: parse_float(worksheet['X' + row]),               // P23
-            samoob_9: parse_float(worksheet['Y' + row]),                // P24
-            samoob_5: parse_float(worksheet['Z' + row]),                // P25
-            samoob_uvoz: parse_float(worksheet['AA' + row]),            // P26
-            dobave_zunaj_slo: parse_float(worksheet['AB' + row]),       // P27
-            opombe: parse_string(worksheet['AC' + row]),                // P28
-            samoprijava_obdobje: parse_string(worksheet['AD' + row]),    // OBDOBJE88
-            samoprijava_davek: parse_string(worksheet['AE' + row]),      // DAVEK88
-            obdobje: parse_string(worksheet['N1']),                     // OBDOBJE
-            nacin: parse_string(worksheet['S1']),                       // OBRAVNAVA
+            obdobje: parse_string(worksheet['E' + row]),                // OBDOBJE
+            nacin: parse_method(worksheet['F' + row]),                     // OBRAVNAVA
+            podjetje: parse_string(worksheet['G' + row]),               // P5
+            koda_drzave: parse_string(worksheet['H' + row]),            // P6
+            davcna: parse_string(worksheet['I' + row]),                 // P6DS
+            vrednost_brez_ddv: parse_float(worksheet['J' + row]),       // P7
+            ddv_prejemnik: parse_float(worksheet['K' + row]),           // P8
+            oproscene_dobave_slo: parse_float(worksheet['L' + row]),    // P9
+            oproscene_dobave_eu: parse_float(worksheet['M' + row]),     // P10
+            tristranske_dobave_eu: parse_float(worksheet['N' + row]),   // P11
+            prodaja_na_daljavo: parse_float(worksheet['O' + row]),      // P12
+            dobava_v_eu: parse_float(worksheet['P' + row]),             // P13
+            ddv_22: parse_float(worksheet['Q' + row]),                  // P14
+            ddv_9: parse_float(worksheet['R' + row]),                   // P15
+            ddv_5: parse_float(worksheet['S' + row]),                   // P16
+            prid_material_eu_22: parse_float(worksheet['T' + row]),     // P17
+            prid_storitve_eu_22: parse_float(worksheet['U' + row]),     // P18
+            prid_material_eu_9: parse_float(worksheet['V' + row]),      // P19
+            prid_storitve_eu_9: parse_float(worksheet['W' + row]),      // P20
+            prid_material_eu_5: parse_float(worksheet['X' + row]),      // P21
+            prid_storitve_eu_5: parse_float(worksheet['Y' + row]),      // P22
+            samoob_22: parse_float(worksheet['Z' + row]),               // P23
+            samoob_9: parse_float(worksheet['AA' + row]),               // P24
+            samoob_5: parse_float(worksheet['AB' + row]),               // P25
+            samoob_uvoz: parse_float(worksheet['AC' + row]),            // P26
+            dobave_zunaj_slo: parse_float(worksheet['AD' + row]),       // P27
+            opombe: parse_string(worksheet['AE' + row]),                // P28
+            samoprijava_obdobje: parse_string(worksheet['AF' + row]),   // OBDOBJE88
+            samoprijava_davek: parse_string(worksheet['AG' + row]),     // DAVEK88
         });
 
         row++;
@@ -186,8 +208,7 @@ function parse_kir(data) {
 function parse_kpr(data) {
     var parsed_data = [];
     const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
+    const worksheet = workbook.Sheets['KPR'];
 
     var row = 10;
     while (worksheet['A' + row]) {
@@ -197,28 +218,28 @@ function parse_kpr(data) {
             stevilka_racuna: parse_integer(worksheet['C' + row]),       // P3
             datum_prejema: parse_date(worksheet['D' + row]),            // P4
             datum_racuna: parse_date(worksheet['E' + row]),             // P5
-            podjetje: parse_string(worksheet['F' + row]),               // P6
-            koda_drzave: parse_string(worksheet['G' + row]),            // P7
-            davcna: parse_string(worksheet['H' + row]),                 // P7DS
-            vrednost_brez_ddv: parse_float(worksheet['I' + row]),       // P8
-            ddv_obrac_prejem: parse_float(worksheet['J' + row]),        // P9
-            pridobitve_blaga_eu: parse_float(worksheet['K' + row]),     // P10
-            pridobitve_storitev_eu: parse_float(worksheet['L' + row]),  // P11
-            nepremicnine: parse_float(worksheet['M' + row]),            // P12
-            osnovna_sredstva: parse_float(worksheet['N' + row]),        // P13
-            oproscene_nabave: parse_float(worksheet['O' + row]),        // P14
-            oproscene_neprem: parse_float(worksheet['P' + row]),        // P15
-            oproscena_oprema: parse_float(worksheet['Q' + row]),        // P16
-            ne_obije: parse_float(worksheet['R' + row]),                // P17
-            ddv_22: parse_float(worksheet['S' + row]),                  // P18
-            ddv_9: parse_float(worksheet['T' + row]),                   // P19
-            ddv_5: parse_float(worksheet['U' + row]),                   // P20
-            pavsal_8: parse_float(worksheet['V' + row]),                // P21
-            opombe: parse_string(worksheet['W' + row]),                 // P22
-            samoprijava_obdobje: parse_string(worksheet['X' + row]),    // OBDOBJE88
-            samoprijava_davek: parse_string(worksheet['Y' + row]),      // DAVEK88
-            obdobje: parse_string(worksheet['B1']),                     // OBDOBJE
-            nacin: parse_string(worksheet['D1']),                       // OBRAVNAVA
+            obdobje: parse_string(worksheet['F' + row]),                // OBDOBJE
+            nacin: parse_method(worksheet['G' + row]),                     // OBRAVNAVA
+            podjetje: parse_string(worksheet['H' + row]),               // P6
+            koda_drzave: parse_string(worksheet['I' + row]),            // P7
+            davcna: parse_string(worksheet['J' + row]),                 // P7DS
+            vrednost_brez_ddv: parse_float(worksheet['K' + row]),       // P8
+            ddv_obrac_prejem: parse_float(worksheet['L' + row]),        // P9
+            pridobitve_blaga_eu: parse_float(worksheet['M' + row]),     // P10
+            pridobitve_storitev_eu: parse_float(worksheet['N' + row]),  // P11
+            nepremicnine: parse_float(worksheet['O' + row]),            // P12
+            osnovna_sredstva: parse_float(worksheet['P' + row]),        // P13
+            oproscene_nabave: parse_float(worksheet['Q' + row]),        // P14
+            oproscene_neprem: parse_float(worksheet['R' + row]),        // P15
+            oproscena_oprema: parse_float(worksheet['S' + row]),        // P16
+            ne_obije: parse_float(worksheet['T' + row]),                // P17
+            ddv_22: parse_float(worksheet['U' + row]),                  // P18
+            ddv_9: parse_float(worksheet['V' + row]),                   // P19
+            ddv_5: parse_float(worksheet['W' + row]),                   // P20
+            pavsal_8: parse_float(worksheet['X' + row]),                // P21
+            opombe: parse_string(worksheet['Y' + row]),                 // P22
+            samoprijava_obdobje: parse_string(worksheet['Z' + row]),    // OBDOBJE88
+            samoprijava_davek: parse_string(worksheet['AA' + row]),     // DAVEK88
         });
 
         row++;
@@ -228,7 +249,8 @@ function parse_kpr(data) {
     return parsed_data;
 }
 
-function validate_file(event) {
+async function validate_file(event) {
+    // TODO validate tax id?
     const file = event.target.files[0];
     if (!file) {
         return false;
@@ -241,38 +263,44 @@ function validate_file(event) {
     ];
     if (!validTypes.includes(file.type)) {
         errorDiv.textContent = 'Omogočeno je samo nalaganje Excel datotek (.xls or .xlsx)';
-        outputDiv.innerHTML = '';
-        downloadJson.style.display = 'none';
+        display_reset();
+        return false;
+    }
+
+    const workbook = XLSX.read(await event.target.files[0].arrayBuffer(), { type: 'array', cellDates: true });
+    if (!workbook.SheetNames.includes("Glava") || !workbook.SheetNames.includes("KIR") || !workbook.SheetNames.includes("KPR")) {
+        errorDiv.textContent = 'Pričakovani listi v Excel datoteki so: Glava, KIR, KPR.';
+        display_reset();
         return false;
     }
 
     return true;
 }
 
-function generate_furs_json() {
+function generate_furs_json(header, kir, kpr) {
     // Note: This does not pass validation on eDavki and I can't figure out why. Keeping for
     // historical reasons. We are using XML instead.
     var furs_json = {
         Glava: {
-            TaxPayerID: davcnaStevilka.value.trim(),
+            TaxPayerID: header.davcnaStevilka.value,
             // TODO do we need this?
             //TUJEC1: "AB",
             //TUJEC2: "string",
             // TODO How can we only get this once?
-            OBDOBJE_OD: formatDate(obdobjeOd.valueAsDate, "yyyy-MM-dd"),
-            OBDOBJE_DO: formatDate(obdobjeDo.valueAsDate, "yyyy-MM-dd"),
+            OBDOBJE_OD: formatDate(header.obdobjeOd.value, "yyyy-MM-dd"),
+            OBDOBJE_DO: formatDate(header.obdobjeDo.value, "yyyy-MM-dd"),
             KIR: kir.length > 0,
             KPR: kpr.length > 0,
-            VRACILO: zahtevamVracilo.checked,
-            ODBDELEZ: izracunavamOdbitniDelez.checked,
-            INSPOS: insolventniPostopek.checked,
-            PREDLODO: odlocitevFu.checked,
-            OPOMBA: opomba.value,
+            VRACILO: header.vracilo.value,
+            ODBDELEZ: header.odbitniDelez.value,
+            INSPOS: header.insolventniPostopek.value,
+            PREDLODO: header.odlocbaFurs.value,
+            OPOMBA: header.opomba.value,
         },
     };
 
-    if (nacin.value.trim() != '') {
-        furs_json.Glava.NACIN = nacin.value.trim();
+    if (header.nacin.value) {
+        furs_json.Glava.NACIN = header.nacin.value;
     }
 
     if (kir.length > 0) {
@@ -408,43 +436,37 @@ function generate_furs_xml(export_data) {
     return xmlString;
 }
 
-function generate_furs_files() {
-    // TODO validate tax id?
-    if (kir == undefined || kpr == undefined || davcnaStevilka.value.trim() == '' || obdobjeOd.value.trim() == '' || obdobjeDo.value.trim() == '') {
-        downloadJson.style.display = 'none';
-        downloadXml.style.display = 'none';
-        downloadZip.style.display = 'none';
-        resetForm.style.display = 'none';
-        outputDiv.innerHTML = '';
-        return;
-    }
-
+function generate_furs_files(data) {
     // Prepare JSON download
-    const export_data = generate_furs_json();
+    const header = parse_header(data);
+    const export_data = generate_furs_json(
+        header,
+        parse_kir(data),
+        parse_kpr(data)
+    );
     const jsonString = JSON.stringify(export_data, null, 2);
     const jsonBlob = new Blob([jsonString], { type: 'application/json' });
-    const jsonFilename = `DDV_${davcnaStevilka.value.trim()}_${formatDate(obdobjeOd.value, "yyyyMM")}_${formatDate(obdobjeDo.value, "yyyyMM")}.json`;
+    const jsonFilename = `DDV_${header.davcnaStevilka.value.trim()}_${formatDate(header.obdobjeOd.value, "yyyyMM")}_${formatDate(header.obdobjeDo.value, "yyyyMM")}.json`;
 
     // Prepare XML download.
     const xmlString = generate_furs_xml(export_data);
     const xmlBlob = new Blob([xmlString], { type: 'application/xml' });
-    const xmlFilename = `DDV_${davcnaStevilka.value.trim()}_${formatDate(obdobjeOd.value, "yyyyMM")}_${formatDate(obdobjeDo.value, "yyyyMM")}.xml`;
-
-    // Create ZIP file
-    const zip = new JSZip();
-    zip.file(xmlFilename, xmlString);
-    zip.generateAsync({ type: 'blob' }).then(function(zipBlob) {
-        downloadZip.href = URL.createObjectURL(zipBlob);
-        downloadZip.download = `DDV_${davcnaStevilka.value.trim()}_${formatDate(obdobjeOd.value, "yyyyMM")}_${formatDate(obdobjeDo.value, "yyyyMM")}.zip`;
-        downloadZip.style.display = 'inline-block';
-        resetForm.style.display = 'inline-block';
-    });
+    const xmlFilename = `DDV_${header.davcnaStevilka.value.trim()}_${formatDate(header.obdobjeOd.value, "yyyyMM")}_${formatDate(header.obdobjeDo.value, "yyyyMM")}.xml`;
 
     downloadJson.href = URL.createObjectURL(jsonBlob);
     downloadJson.download = jsonFilename;
 
     downloadXml.href = URL.createObjectURL(xmlBlob);
     downloadXml.download = xmlFilename;
+
+    // Create ZIP file
+    const zip = new JSZip();
+    zip.file(xmlFilename, xmlString);
+    zip.generateAsync({ type: 'blob' }).then(function(zipBlob) {
+        downloadZip.href = URL.createObjectURL(zipBlob);
+        downloadZip.download = `DDV_${header.davcnaStevilka.value.trim()}_${formatDate(header.obdobjeOd.value, "yyyyMM")}_${formatDate(header.obdobjeDo.value, "yyyyMM")}.zip`;
+        display_output();
+    });
 
     // Create tables
     outputDiv.innerHTML = '';
@@ -464,72 +486,47 @@ function generate_furs_files() {
     if ('Lista_KPR' in export_data) {
         outputDiv.appendChild(generateTable(export_data.Lista_KPR.KPR));
     }
-
-    metadataDiv.style.display = 'none';
-    filesDiv.style.display = 'none';
 }
 
-kprFile.addEventListener('change', async (event) => {
+excelFile.addEventListener('change', async (event) => {
     if (!validate_file(event)) {
+        display_reset();
         return;
     }
 
     try {
-        kpr = parse_kpr(await event.target.files[0].arrayBuffer());
-        generate_furs_files();
+        generate_furs_files(await event.target.files[0].arrayBuffer());
     } catch (error) {
         errorDiv.textContent = 'Error parsing file: ' + error.message;
-        outputDiv.innerHTML = '';
-        downloadJson.style.display = 'none';
+        display_reset();
     }
 });
 
-kirFile.addEventListener('change', async (event) => {
-    if (!validate_file(event)) {
-        return;
-    }
+resetForm.addEventListener('click', display_input);
 
-    try {
-        kir = parse_kir(await event.target.files[0].arrayBuffer());
-        generate_furs_files();
-    } catch (error) {
-        errorDiv.textContent = 'Error parsing file: ' + error.message;
-        outputDiv.innerHTML = '';
-        downloadJson.style.display = 'none';
-    }
-});
+function display_output() {
+    filesDiv.style.display = 'none';
+    downloadZip.style.display = 'inline-block';
+    // downloadJson.style.display = 'inline-block';
+    // downloadXml.style.display = 'inline-block';
+    resetForm.style.display = 'inline-block';
+}
 
-resetForm.addEventListener('click', async (_event) => {
+function display_input() {
     downloadJson.style.display = 'none';
     downloadXml.style.display = 'none';
     downloadZip.style.display = 'none';
     resetForm.style.display = 'none';
-    metadataDiv.style.display = 'block';
     filesDiv.style.display = 'flex';
     outputDiv.innerHTML = '';
-    setDefaultDates();
-    davcnaStevilka.value = '';
-    zahtevamVracilo.checked = false;
-    izracunavamOdbitniDelez.checked = false;
-    insolventniPostopek.checked = false;
-    odlocitevFu.checked = false;
-    nacin.value = '';
-    opomba.value = '';
-    kprFile.value = '';
-    kirFile.value = '';
-    kir = undefined;
-    kpr = undefined;
-});
+    errorDiv.innerHTML = '';
+    excelFile.value = '';
+}
 
-davcnaStevilka.addEventListener('change', generate_furs_files);
-zahtevamVracilo.addEventListener('change', generate_furs_files);
-izracunavamOdbitniDelez.addEventListener('change', generate_furs_files);
-insolventniPostopek.addEventListener('change', generate_furs_files);
-odlocitevFu.addEventListener('change', generate_furs_files);
-nacin.addEventListener('change', generate_furs_files);
-opomba.addEventListener('change', generate_furs_files);
-obdobjeOd.addEventListener('change', generate_furs_files);
-obdobjeDo.addEventListener('change', generate_furs_files);
-
-// Set default dates for Obdobje od (first day of previous month) and Obdobje do (last day of previous month)
-document.addEventListener('DOMContentLoaded', setDefaultDates);
+function display_reset() {
+    resetForm.style.display = 'inline-block';
+    filesDiv.style.display = 'none';
+    downloadJson.style.display = 'none';
+    downloadXml.style.display = 'none';
+    downloadZip.style.display = 'none';
+}

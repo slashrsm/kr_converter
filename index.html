@@ -72,65 +72,10 @@
 </head>
 <body>
     <h1>KIR/KPR konverzija</h1>
-    <div id="metadata" style="max-width: 400px; margin: 20px auto; font-family: Arial, sans-serif;">
-        <div style="margin-bottom: 15px;">
-            <label for="davcnaStevilka">Davčna številka zavezanca:*</label><br>
-            <input type="text" id="davcnaStevilka" name="davcnaStevilka" style="width: 100%; padding: 8px;" required>
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label for="obdobjeOd">Obdobje od:*</label><br>
-            <input type="date" id="obdobjeOd" name="obdobjeOd" style="width: 100%; padding: 8px;" required>
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label for="obdobjeDo">Obdobje do:*</label><br>
-            <input type="date" id="obdobjeDo" name="obdobjeDo" style="width: 100%; padding: 8px;" required>
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label>
-                <input type="checkbox" id="zahtevamVracilo" name="zahtevamVracilo">
-                Zahtevam vračilo
-            </label>
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label>
-                <input type="checkbox" id="izracunavamOdbitniDelez" name="izracunavamOdbitniDelez">
-                Izračunavam odbitni delež
-            </label>
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label>
-                <input type="checkbox" id="insolventniPostopek" name="insolventniPostopek">
-                Insolventni postopek
-            </label>
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label>
-                <input type="checkbox" id="odlocitevFu" name="odlocitevFu">
-                Predložitev na podlagi odločitve davčnega organa
-            </label>
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label for="nacin">Način:</label><br>
-            <select id="nacin" name="nacin" style="width: 100%; padding: 8px;">
-                <option value="">-- Izberite možnost --</option>
-                <option value="1">1 - Samoprijava</option>
-                <option value="2">2 - Vloga za predložitev po roku</option>
-                <option value="3">3 - Ne bom uporabil instituta samoprijave</option>
-            </select>
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label for="opomba">Opomba:</label><br>
-            <input type="text" id="opomba" name="opomba" style="width: 100%; padding: 8px;">
-        </div>
-    </div>
     <div id="files">
         <div>
-            <h2>Knjiga prejetih računov</h2>
-            <input type="file" id="kprFile" accept=".xls,.xlsx">
-        </div>
-        <div>
-            <h2>Knjiga izdanih računov</h2>
-            <input type="file" id="kirFile" accept=".xls,.xlsx">
+            <h2>Knjiga prejetih/izdanih računov</h2>
+            <input type="file" id="excelFile" accept=".xls,.xlsx">
         </div>
     </div>
     <div id="download-link">
