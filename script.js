@@ -5,17 +5,22 @@ import { format as formatDate } from "date-fns";
 const excelFile = document.getElementById('excelFile');
 const outputDiv = document.getElementById('output');
 const errorDiv = document.getElementById('error');
+const errorText = document.getElementById('errorText');
 const downloadJson = document.getElementById('downloadJson');
 const downloadXml = document.getElementById('downloadXml');
 const downloadZip = document.getElementById('downloadZip');
 const resetForm = document.getElementById('resetForm');
-const filesDiv = document.getElementById('files');
+const fileUploadArea = document.getElementById('fileUploadArea');
+const fileName = document.getElementById('fileName');
 
 var version = 'development_version';
 var versionElement = document.getElementById('appVersion');
 versionElement.innerHTML = version;
 
 function generateTable(data, inverted = false) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'table-responsive';
+
     const table = document.createElement('table');
     if (inverted) {
         for (var key in data) {
@@ -33,24 +38,33 @@ function generateTable(data, inverted = false) {
     } else {
         data.forEach((row, index) => {
             if (index === 0) {
+                const thead = document.createElement('thead');
                 const tr = document.createElement('tr');
                 for (var key in row) {
                     const td = document.createElement('th');
                     td.textContent = key ?? '';
                     tr.appendChild(td);
                 }
-                table.appendChild(tr);
+                thead.appendChild(tr);
+                table.appendChild(thead);
             }
+        });
+
+        const tbody = document.createElement('tbody');
+        data.forEach((row, index) => {
             const tr = document.createElement('tr');
             for (var key in row) {
                 const td = document.createElement('td');
                 td.textContent = row[key] ?? '';
                 tr.appendChild(td);
             }
-            table.appendChild(tr);
+            tbody.appendChild(tr);
         });
+        table.appendChild(tbody);
     }
-    return table;
+
+    wrapper.appendChild(table);
+    return wrapper;
 }
 
 function parse_simple_value(raw) {
@@ -249,7 +263,7 @@ function parse_kpr(data) {
     return parsed_data;
 }
 
-async function validate_file(event) {
+function validate_file(event, data) {
     // TODO validate tax id?
     const file = event.target.files[0];
     if (!file) {
@@ -267,7 +281,7 @@ async function validate_file(event) {
         return false;
     }
 
-    const workbook = XLSX.read(await event.target.files[0].arrayBuffer(), { type: 'array', cellDates: true });
+    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
     if (!workbook.SheetNames.includes("Glava") || !workbook.SheetNames.includes("KIR") || !workbook.SheetNames.includes("KPR")) {
         errorDiv.textContent = 'Pričakovani listi v Excel datoteki so: Glava, KIR, KPR.';
         display_reset();
@@ -489,7 +503,8 @@ function generate_furs_files(data) {
 }
 
 excelFile.addEventListener('change', async (event) => {
-    if (!validate_file(event)) {
+    const data = await event.target.files[0].arrayBuffer();
+    if (!validate_file(event, data)) {
         display_reset();
         return;
     }
@@ -505,7 +520,7 @@ excelFile.addEventListener('change', async (event) => {
 resetForm.addEventListener('click', display_input);
 
 function display_output() {
-    filesDiv.style.display = 'none';
+    fileUploadArea.style.display = 'none';
     downloadZip.style.display = 'inline-block';
     // downloadJson.style.display = 'inline-block';
     // downloadXml.style.display = 'inline-block';
@@ -517,7 +532,7 @@ function display_input() {
     downloadXml.style.display = 'none';
     downloadZip.style.display = 'none';
     resetForm.style.display = 'none';
-    filesDiv.style.display = 'flex';
+    fileUploadArea.style.display = 'flex';
     outputDiv.innerHTML = '';
     errorDiv.innerHTML = '';
     excelFile.value = '';
@@ -525,8 +540,188 @@ function display_input() {
 
 function display_reset() {
     resetForm.style.display = 'inline-block';
-    filesDiv.style.display = 'none';
+    fileUploadArea.style.display = 'none';
     downloadJson.style.display = 'none';
     downloadXml.style.display = 'none';
     downloadZip.style.display = 'none';
 }
+
+// Drag and Drop functionality
+function handleDragOver(event) {
+    event.preventDefault();
+    fileUploadArea.classList.add('dragover');
+}
+
+function handleDragLeave(event) {
+    event.preventDefault();
+    fileUploadArea.classList.remove('dragover');
+}
+
+function handleDrop(event) {
+    event.preventDefault();
+    fileUploadArea.classList.remove('dragover');
+
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+        const file = files[0];
+        const validTypes = [
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ];
+
+        if (!validTypes.includes(file.type)) {
+            showError('Omogočene so samo Excel datoteke (.xls, .xlsx)');
+            return;
+        }
+
+        excelFile.files = files;
+        updateFileName(file.name);
+        excelFile.dispatchEvent(new Event('change'));
+    }
+}
+
+// File name display
+function updateFileName(name) {
+    fileName.textContent = `Izbrana datoteka: ${name}`;
+    fileName.style.display = 'block';
+}
+
+// Error handling
+function showError(message) {
+    errorText.textContent = message;
+    errorDiv.style.display = 'flex';
+    errorDiv.classList.add('fade-in');
+}
+
+function hideError() {
+    errorDiv.style.display = 'none';
+    errorText.textContent = '';
+}
+
+// Loading states
+function showLoading(element, text = 'Obdelovanje...') {
+    element.innerHTML = `<span class="loading"></span> ${text}`;
+    element.disabled = true;
+}
+
+function hideLoading(element, originalText) {
+    element.innerHTML = originalText;
+    element.disabled = false;
+}
+
+// Update table generation to include section titles
+function generate_furs_files(data) {
+    showLoading(downloadZip, 'Ustvarjam datoteke...');
+
+    // Prepare JSON download
+    const header = parse_header(data);
+    const export_data = generate_furs_json(
+        header,
+        parse_kir(data),
+        parse_kpr(data)
+    );
+    const jsonString = JSON.stringify(export_data, null, 2);
+    const jsonBlob = new Blob([jsonString], { type: 'application/json' });
+    const jsonFilename = `DDV_${header.davcnaStevilka.value.trim()}_${formatDate(header.obdobjeOd.value, "yyyyMM")}_${formatDate(header.obdobjeDo.value, "yyyyMM")}.json`;
+
+    // Prepare XML download.
+    const xmlString = generate_furs_xml(export_data);
+    const xmlBlob = new Blob([xmlString], { type: 'application/xml' });
+    const xmlFilename = `DDV_${header.davcnaStevilka.value.trim()}_${formatDate(header.obdobjeOd.value, "yyyyMM")}_${formatDate(header.obdobjeDo.value, "yyyyMM")}.xml`;
+
+    downloadJson.href = URL.createObjectURL(jsonBlob);
+    downloadJson.download = jsonFilename;
+
+    downloadXml.href = URL.createObjectURL(xmlBlob);
+    downloadXml.download = xmlFilename;
+
+    // Create ZIP file
+    const zip = new JSZip();
+    zip.file(xmlFilename, xmlString);
+    zip.generateAsync({ type: 'blob' }).then(function(zipBlob) {
+        downloadZip.href = URL.createObjectURL(zipBlob);
+        downloadZip.download = `DDV_${header.davcnaStevilka.value.trim()}_${formatDate(header.obdobjeOd.value, "yyyyMM")}_${formatDate(header.obdobjeDo.value, "yyyyMM")}.zip`;
+        hideLoading(downloadZip, '📦 Prenesi ZIP');
+        display_output();
+    });
+
+    // Create tables with improved structure
+    outputDiv.innerHTML = '';
+
+    // Company info section
+    const companySection = document.createElement('section');
+    companySection.className = 'output-section card';
+    const companyTitle = document.createElement('h3');
+    companyTitle.className = 'section-title';
+    companyTitle.textContent = '❖ Osnovni podatki';
+    companySection.appendChild(companyTitle);
+    companySection.appendChild(generateTable(export_data.Glava, true));
+    outputDiv.appendChild(companySection);
+
+    // KIR section
+    if ('Lista_KIR' in export_data && export_data.Lista_KIR.KIR.length > 0) {
+        const kirSection = document.createElement('section');
+        kirSection.className = 'output-section card';
+        const kirTitle = document.createElement('h3');
+        kirTitle.className = 'section-title';
+        kirTitle.textContent = '💰 Knjiga izdanih računov (KIR)';
+        kirSection.appendChild(kirTitle);
+        kirSection.appendChild(generateTable(export_data.Lista_KIR.KIR));
+        outputDiv.appendChild(kirSection);
+    }
+
+    // KPR section
+    if ('Lista_KPR' in export_data && export_data.Lista_KPR.KPR.length > 0) {
+        const kprSection = document.createElement('section');
+        kprSection.className = 'output-section card';
+        const kprTitle = document.createElement('h3');
+        kprTitle.className = 'section-title';
+        kprTitle.textContent = '📥 Knjiga prejetih računov (KPR)';
+        kprSection.appendChild(kprTitle);
+        kprSection.appendChild(generateTable(export_data.Lista_KPR.KPR));
+        outputDiv.appendChild(kprSection);
+    }
+}
+
+// Event listeners
+excelFile.addEventListener('change', async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    updateFileName(file.name);
+    hideError();
+
+    const validTypes = [
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+
+    if (!validTypes.includes(file.type)) {
+        showError('Omogočene so samo Excel datoteke (.xls, .xlsx)');
+        return;
+    }
+
+    try {
+        const workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
+        if (!workbook.SheetNames.includes("Glava") || !workbook.SheetNames.includes("KIR") || !workbook.SheetNames.includes("KPR")) {
+            showError('Pričakovani listi v Excel datoteki so: Glava, KIR, KPR');
+            display_reset();
+            return;
+        }
+        generate_furs_files(await file.arrayBuffer());
+    } catch (error) {
+        showError('Napaka pri obdelavi datoteke: ' + error.message);
+        display_reset();
+    }
+});
+
+resetForm.addEventListener('click', () => {
+    display_input();
+    fileName.style.display = 'none';
+    hideError();
+    excelFile.value = '';
+});
+
+fileUploadArea.addEventListener('dragover', handleDragOver);
+fileUploadArea.addEventListener('dragleave', handleDragLeave);
+fileUploadArea.addEventListener('drop', handleDrop);

@@ -1,94 +1,387 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel File Parser</title>
+    <title>KIR/KPR Konverter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary-color: #64748b;
+            --success-color: #059669;
+            --warning-color: #d97706;
+            --danger-color: #dc2626;
+            --background-color: #ffffff;
+            --surface-color: #f8fafc;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --border-radius: 8px;
+            --border-radius-lg: 12px;
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 0.75rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            --spacing-2xl: 3rem;
+            --text-color: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            margin: 0 auto;
-            padding: 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--surface-color);
+            color: var(--text-color);
+            line-height: 1.6;
         }
-        h1 {
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--spacing-md);
+        }
+
+        .header {
             text-align: center;
+            padding: var(--spacing-2xl) 0;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            margin-bottom: var(--spacing-xl);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--card-shadow);
         }
-        input[type="file"] {
-            display: block;
-            margin: 20px 0;
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
         }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
+
+        .card {
+            background: var(--background-color);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--card-shadow);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-        th {
-            background-color: #f2f2f2;
+
+        .upload-section {
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
         }
-        #error {
-            color: red;
-            margin-top: 10px;
+
+        .upload-section h2 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: var(--spacing-lg);
         }
-        #download-link {
-            max-width: 800px;
-            margin: 0 auto;
+
+        .file-upload-area {
+            border: 2px dashed var(--secondary-color);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-xl);
+            background-color: var(--surface-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-block;
+            min-height: 120px;
             display: flex;
-            gap: 1em;
+            align-items: center;
             justify-content: center;
+            flex-direction: column;
         }
+
+        .file-upload-area:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(37, 99, 235, 0.05);
+        }
+
+        .file-upload-area.dragover {
+            border-color: var(--primary-color);
+            background-color: rgba(37, 99, 235, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            color: var(--secondary-color);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: var(--primary-color);
+            margin-top: var(--spacing-sm);
+        }
+
+        .actions {
+            display: flex;
+            gap: var(--spacing-md);
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: var(--spacing-2xl) 0;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+            min-width: 120px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #047857;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #475569;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #b91c1c;
+            transform: translateY(-1px);
+        }
+
         #download-link a {
             display: none;
-            margin: 10px 0;
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
         }
-        #download-link a:hover {
-            background-color: #45a049;
-        }
-        #files {
+
+        .error-message {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: var(--danger-color);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing-md);
             display: flex;
-            gap: 1em;
-            max-width: 800px;
-            margin: 0 auto;
+            align-items: center;
         }
 
-        #files div {
-            width: 50%;
+        .error-icon {
+            margin-right: var(--spacing-sm);
+            font-size: 1.2rem;
         }
 
-        #output {
-            max-width: 100%;
-            overflow: scroll;
+        .output-section {
+            margin-top: var(--spacing-xl);
+        }
+
+        .section-title {
+            color: var(--text-color);
+            font-weight: 600;
+            font-size: 1.5rem;
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: var(--spacing-2xl);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        table th,
+        table td {
+            padding: var(--spacing-md);
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        table th {
+            background-color: var(--surface-color);
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .footer {
+            text-align: center;
+            padding: var(--spacing-xl) 0;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .footer span {
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: var(--spacing-sm);
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: var(--spacing-lg);
+            }
+
+            .actions {
+                gap: var(--spacing-sm);
+            }
+
+            .btn {
+                padding: var(--spacing-sm) var(--spacing-md);
+                min-width: 100px;
+            }
+
+            .upload-section h2 {
+                font-size: 1.25rem;
+            }
+
+            .file-upload-area {
+                padding: var(--spacing-lg);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <h1>KIR/KPR konverzija</h1>
-    <div id="files">
-        <div>
-            <h2>Knjiga prejetih/izdanih računov</h2>
-            <input type="file" id="excelFile" accept=".xls,.xlsx">
+    <header class="header">
+        <div class="container">
+            <h1>KIR/KPR Konverter</h1>
         </div>
-    </div>
-    <div id="download-link">
-        <a id="downloadJson" href="#" download="KIR_KPR.json">Prenesi JSON za FURS</a>
-        <a id="downloadXml" href="#" download="KIR_KPR.xml">Prenesi XML za FURS</a>
-        <a id="downloadZip" href="#" download="KIR_KPR.zip">Prenesi ZIP za FURS</a>
-        <a id="resetForm" href="#">Naloži nov dokument</a>
-    </div>
-    <div id="error"></div>
-    <div id="output"></div>
-    <div style="text-align: center; margin-top: 20px; font-size: 0.8em; color: #666;">
-        Verzija: <span id="appVersion"></span>
-    </div>
+    </header>
+
+    <main class="container">
+        <section class="upload-section card">
+            <h2>Dokument za pretvorbo</h2>
+            <label for="excelFile" class="file-upload-area" id="fileUploadArea">
+                <div class="upload-icon">📁</div>
+                <div>Kliknite ali povlecite Excel datoteko (.xls, .xlsx)</div>
+            </label>
+            <input type="file" id="excelFile" accept=".xls,.xlsx">
+            <div class="file-name" id="fileName" style="display: none;"></div>
+        </section>
+
+        <div class="actions">
+            <a id="downloadJson" href="#" style="display: none" download="KIR_KPR.json" class="btn btn-secondary">
+                📄 Prenesi JSON
+            </a>
+            <a id="downloadXml" href="#" style="display: none" download="KIR_KPR.xml" class="btn btn-secondary">
+                📄 Prenesi XML
+            </a>
+            <a id="downloadZip" href="#" style="display: none" download="KIR_KPR.zip" class="btn btn-success">
+                📦 Prenesi ZIP
+            </a>
+            <a id="resetForm" href="#" style="display: none" class="btn btn-danger">
+                🔄 Naloži nov dokument
+            </a>
+        </div>
+
+        <div id="error" class="error-message fade-in" style="display: none;">
+            <span class="error-icon">⚠️</span>
+            <span id="errorText"></span>
+        </div>
+
+        <div id="output" class="output-section">
+            <!-- Parsed data tables will appear here -->
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            Verzija: <span id="appVersion"></span>
+        </div>
+    </footer>
+
     <script type="module" src="script.js"></script>
 </body>
 </html>
