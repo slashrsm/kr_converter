@@ -174,7 +174,7 @@ function parse_kir(data) {
     const workbook = XLSX.read(data, { type: 'array', cellDates: true });
     const worksheet = workbook.Sheets['KIR'];
 
-    var row = 9;
+    var row = 10;
     while (worksheet['A' + row]) {
         parsed_data.push({
             zaporedna: parse_integer(worksheet['A' + row]),             // ZAPST
@@ -224,7 +224,7 @@ function parse_kpr(data) {
     const workbook = XLSX.read(data, { type: 'array', cellDates: true });
     const worksheet = workbook.Sheets['KPR'];
 
-    var row = 10;
+    var row = 11;
     while (worksheet['A' + row]) {
         parsed_data.push({
             zaporedna: parse_integer(worksheet['A' + row]),             // ZAPST
