@@ -17,6 +17,12 @@ var version = 'development_version';
 var versionElement = document.getElementById('appVersion');
 versionElement.innerHTML = version;
 
+function escapeXml(str) {
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
 function generateTable(data, inverted = false) {
     const wrapper = document.createElement('div');
     wrapper.className = 'table-responsive';
@@ -98,7 +104,7 @@ function parse_string(raw) {
     }
 
     return {
-        value: raw.w,
+        value: raw.w.trim(),
         raw: raw,
     }
 }
@@ -233,7 +239,7 @@ function parse_kpr(data) {
             datum_prejema: parse_date(worksheet['D' + row]),            // P4
             datum_racuna: parse_date(worksheet['E' + row]),             // P5
             obdobje: parse_string(worksheet['F' + row]),                // OBDOBJE
-            nacin: parse_method(worksheet['G' + row]),                     // OBRAVNAVA
+            nacin: parse_method(worksheet['G' + row]),                  // OBRAVNAVA
             podjetje: parse_string(worksheet['H' + row]),               // P6
             koda_drzave: parse_string(worksheet['I' + row]),            // P7
             davcna: parse_string(worksheet['J' + row]),                 // P7DS
@@ -436,7 +442,8 @@ function generate_furs_xml(export_data) {
                 !emptyValuesToOmit.includes(path + '.' + parentTag) ||
                 (data && (typeof data.value === "string" && data.value.trim()))
             ) {
-                xml += `${indent}<${parentTagOpen}>${data}</${parentTag}>\n`;
+                const escaped_data = escapeXml(data);
+                xml += `${indent}<${parentTagOpen}>${escaped_data}</${parentTag}>\n`;
             }
         }
 
