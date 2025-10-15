@@ -300,24 +300,28 @@ function validate_file(event, data) {
 function generate_furs_json(header, kir, kpr) {
     // Note: This does not pass validation on eDavki and I can't figure out why. Keeping for
     // historical reasons. We are using XML instead.
-    var furs_json = {
-        Glava: {
-            TaxPayerID: header.davcnaStevilka.value,
-            // TODO do we need this?
-            //TUJEC1: "AB",
-            //TUJEC2: "string",
-            // TODO How can we only get this once?
-            OBDOBJE_OD: formatDate(header.obdobjeOd.value, "yyyy-MM-dd"),
-            OBDOBJE_DO: formatDate(header.obdobjeDo.value, "yyyy-MM-dd"),
-            KIR: kir.length > 0,
-            KPR: kpr.length > 0,
-            VRACILO: header.vracilo.value,
-            ODBDELEZ: header.odbitniDelez.value,
-            INSPOS: header.insolventniPostopek.value,
-            PREDLODO: header.odlocbaFurs.value,
-            OPOMBA: header.opomba.value,
-        },
-    };
+    try {
+        var furs_json = {
+            Glava: {
+                TaxPayerID: header.davcnaStevilka.value,
+                // TODO do we need this?
+                //TUJEC1: "AB",
+                //TUJEC2: "string",
+                // TODO How can we only get this once?
+                OBDOBJE_OD: formatDate(header.obdobjeOd.value, "yyyy-MM-dd"),
+                OBDOBJE_DO: formatDate(header.obdobjeDo.value, "yyyy-MM-dd"),
+                KIR: kir.length > 0,
+                KPR: kpr.length > 0,
+                VRACILO: header.vracilo.value,
+                ODBDELEZ: header.odbitniDelez.value,
+                INSPOS: header.insolventniPostopek.value,
+                PREDLODO: header.odlocbaFurs.value,
+                OPOMBA: header.opomba.value,
+            },
+        };
+    } catch (error) {
+        throw new Error('Napaka v glavi: ' + error.message);
+    }
 
     if (header.nacin.value) {
         furs_json.Glava.NACIN = header.nacin.value;
@@ -327,41 +331,45 @@ function generate_furs_json(header, kir, kpr) {
         furs_json.Lista_KIR = {};
         furs_json.Lista_KIR.KIR = [];
         kir.forEach((row) => {
-            furs_json.Lista_KIR.KIR.push({
-                ZAPST: row.zaporedna.value,
-                OBDOBJE: row.obdobje.value,
-                P2: formatDate(row.datum_knjizenja.value, "yyyy-MM-dd"),
-                P3: row.stevilka_racuna.value,
-                P4: formatDate(row.datum_racuna.value, "yyyy-MM-dd"),
-                P5: row.podjetje.value,
-                P6: row.koda_drzave.value,
-                P6DS: row.davcna.value,
-                P7: row.vrednost_brez_ddv.value,
-                P8: row.ddv_prejemnik.value,
-                P9: row.oproscene_dobave_slo.value,
-                P10: row.oproscene_dobave_eu.value,
-                P11: row.tristranske_dobave_eu.value,
-                P12: row.prodaja_na_daljavo.value,
-                P13: row.dobava_v_eu.value,
-                P14: row.ddv_22.value,
-                P15: row.ddv_9.value,
-                P16: row.ddv_5.value,
-                P17: row.prid_material_eu_22.value,
-                P18: row.prid_storitve_eu_22.value,
-                P19: row.prid_material_eu_9.value,
-                P20: row.prid_storitve_eu_9.value,
-                P21: row.prid_material_eu_5.value,
-                P22: row.prid_storitve_eu_5.value,
-                P23: row.samoob_22.value,
-                P24: row.samoob_9.value,
-                P25: row.samoob_5.value,
-                P26: row.samoob_uvoz.value,
-                P27: row.dobave_zunaj_slo.value,
-                P28: row.opombe.value,
-                OBRAVNAVA: row.nacin.value,
-                OBDOBJE88: row.samoprijava_obdobje.value,
-                DAVEK88: row.samoprijava_davek.value,
-            });
+            try {
+                furs_json.Lista_KIR.KIR.push({
+                    ZAPST: row.zaporedna.value,
+                    OBDOBJE: row.obdobje.value,
+                    P2: formatDate(row.datum_knjizenja.value, "yyyy-MM-dd"),
+                    P3: row.stevilka_racuna.value,
+                    P4: formatDate(row.datum_racuna.value, "yyyy-MM-dd"),
+                    P5: row.podjetje.value,
+                    P6: row.koda_drzave.value,
+                    P6DS: row.davcna.value,
+                    P7: row.vrednost_brez_ddv.value,
+                    P8: row.ddv_prejemnik.value,
+                    P9: row.oproscene_dobave_slo.value,
+                    P10: row.oproscene_dobave_eu.value,
+                    P11: row.tristranske_dobave_eu.value,
+                    P12: row.prodaja_na_daljavo.value,
+                    P13: row.dobava_v_eu.value,
+                    P14: row.ddv_22.value,
+                    P15: row.ddv_9.value,
+                    P16: row.ddv_5.value,
+                    P17: row.prid_material_eu_22.value,
+                    P18: row.prid_storitve_eu_22.value,
+                    P19: row.prid_material_eu_9.value,
+                    P20: row.prid_storitve_eu_9.value,
+                    P21: row.prid_material_eu_5.value,
+                    P22: row.prid_storitve_eu_5.value,
+                    P23: row.samoob_22.value,
+                    P24: row.samoob_9.value,
+                    P25: row.samoob_5.value,
+                    P26: row.samoob_uvoz.value,
+                    P27: row.dobave_zunaj_slo.value,
+                    P28: row.opombe.value,
+                    OBRAVNAVA: row.nacin.value,
+                    OBDOBJE88: row.samoprijava_obdobje.value,
+                    DAVEK88: row.samoprijava_davek.value,
+                });
+            } catch (error) {
+                throw new Error('Napaka v KIR (zaporedna številka ' + row.zaporedna.value + '): ' + error.message);
+            }
         })
     }
 
@@ -369,35 +377,39 @@ function generate_furs_json(header, kir, kpr) {
         furs_json.Lista_KPR = {};
         furs_json.Lista_KPR.KPR = [];
         kpr.forEach((row) => {
-            furs_json.Lista_KPR.KPR.push({
-                ZAPST: row.zaporedna.value,
-                OBDOBJE: row.obdobje.value,
-                P2: formatDate(row.datum_knjizenja.value, "yyyy-MM-dd"),
-                P3: row.stevilka_racuna.value,
-                P4: formatDate(row.datum_prejema.value, "yyyy-MM-dd"),
-                P5: formatDate(row.datum_racuna.value, "yyyy-MM-dd"),
-                P6: row.podjetje.value,
-                P7: row.koda_drzave.value,
-                P7DS: row.davcna.value,
-                P8: row.vrednost_brez_ddv.value,
-                P9: row.ddv_obrac_prejem.value,
-                P10: row.pridobitve_blaga_eu.value,
-                P11: row.pridobitve_storitev_eu.value,
-                P12: row.nepremicnine.value,
-                P13: row.osnovna_sredstva.value,
-                P14: row.oproscene_nabave.value,
-                P15: row.oproscene_neprem.value,
-                P16: row.oproscena_oprema.value,
-                P17: row.ne_obije.value,
-                P18: row.ddv_22.value,
-                P19: row.ddv_9.value,
-                P20: row.ddv_5.value,
-                P21: row.pavsal_8.value,
-                P22: row.opombe.value,
-                OBRAVNAVA: row.nacin.value,
-                OBDOBJE88: row.samoprijava_obdobje.value,
-                DAVEK88: row.samoprijava_davek.value,
-            });
+            try {
+                furs_json.Lista_KPR.KPR.push({
+                    ZAPST: row.zaporedna.value,
+                    OBDOBJE: row.obdobje.value,
+                    P2: formatDate(row.datum_knjizenja.value, "yyyy-MM-dd"),
+                    P3: row.stevilka_racuna.value,
+                    P4: formatDate(row.datum_prejema.value, "yyyy-MM-dd"),
+                    P5: formatDate(row.datum_racuna.value, "yyyy-MM-dd"),
+                    P6: row.podjetje.value,
+                    P7: row.koda_drzave.value,
+                    P7DS: row.davcna.value,
+                    P8: row.vrednost_brez_ddv.value,
+                    P9: row.ddv_obrac_prejem.value,
+                    P10: row.pridobitve_blaga_eu.value,
+                    P11: row.pridobitve_storitev_eu.value,
+                    P12: row.nepremicnine.value,
+                    P13: row.osnovna_sredstva.value,
+                    P14: row.oproscene_nabave.value,
+                    P15: row.oproscene_neprem.value,
+                    P16: row.oproscena_oprema.value,
+                    P17: row.ne_obije.value,
+                    P18: row.ddv_22.value,
+                    P19: row.ddv_9.value,
+                    P20: row.ddv_5.value,
+                    P21: row.pavsal_8.value,
+                    P22: row.opombe.value,
+                    OBRAVNAVA: row.nacin.value,
+                    OBDOBJE88: row.samoprijava_obdobje.value,
+                    DAVEK88: row.samoprijava_davek.value,
+                });
+            } catch (error) {
+                throw new Error('Napaka v KPR (zaporedna številka ' + row.zaporedna.value + '): ' + error.message);
+            }
         });
     }
 
@@ -457,58 +469,6 @@ function generate_furs_xml(export_data) {
     return xmlString;
 }
 
-function generate_furs_files(data) {
-    // Prepare JSON download
-    const header = parse_header(data);
-    const export_data = generate_furs_json(
-        header,
-        parse_kir(data),
-        parse_kpr(data)
-    );
-    const jsonString = JSON.stringify(export_data, null, 2);
-    const jsonBlob = new Blob([jsonString], { type: 'application/json' });
-    const jsonFilename = `DDV_${header.davcnaStevilka.value.trim()}_${formatDate(header.obdobjeOd.value, "yyyyMM")}_${formatDate(header.obdobjeDo.value, "yyyyMM")}.json`;
-
-    // Prepare XML download.
-    const xmlString = generate_furs_xml(export_data);
-    const xmlBlob = new Blob([xmlString], { type: 'application/xml' });
-    const xmlFilename = `DDV_${header.davcnaStevilka.value.trim()}_${formatDate(header.obdobjeOd.value, "yyyyMM")}_${formatDate(header.obdobjeDo.value, "yyyyMM")}.xml`;
-
-    downloadJson.href = URL.createObjectURL(jsonBlob);
-    downloadJson.download = jsonFilename;
-
-    downloadXml.href = URL.createObjectURL(xmlBlob);
-    downloadXml.download = xmlFilename;
-
-    // Create ZIP file
-    const zip = new JSZip();
-    zip.file(xmlFilename, xmlString);
-    zip.generateAsync({ type: 'blob' }).then(function(zipBlob) {
-        downloadZip.href = URL.createObjectURL(zipBlob);
-        downloadZip.download = `DDV_${header.davcnaStevilka.value.trim()}_${formatDate(header.obdobjeOd.value, "yyyyMM")}_${formatDate(header.obdobjeDo.value, "yyyyMM")}.zip`;
-        display_output();
-    });
-
-    // Create tables
-    outputDiv.innerHTML = '';
-    var heading = document.createElement('h3');
-    heading.innerHTML = 'Glava';
-    outputDiv.appendChild(heading);
-    outputDiv.appendChild(generateTable(export_data.Glava, true));
-    var heading = document.createElement('h3');
-    heading.innerHTML = 'Knjiga izdanih računov';
-    outputDiv.appendChild(heading);
-    if ('Lista_KIR' in export_data) {
-        outputDiv.appendChild(generateTable(export_data.Lista_KIR.KIR));
-    }
-    var heading = document.createElement('h3');
-    heading.innerHTML = 'Knjiga prejetih računov';
-    outputDiv.appendChild(heading);
-    if ('Lista_KPR' in export_data) {
-        outputDiv.appendChild(generateTable(export_data.Lista_KPR.KPR));
-    }
-}
-
 excelFile.addEventListener('change', async (event) => {
     const data = await event.target.files[0].arrayBuffer();
     if (!validate_file(event, data)) {
@@ -519,7 +479,7 @@ excelFile.addEventListener('change', async (event) => {
     try {
         generate_furs_files(await event.target.files[0].arrayBuffer());
     } catch (error) {
-        errorDiv.textContent = 'Error parsing file: ' + error.message;
+        errorDiv.textContent = error.message;
         display_reset();
     }
 });
