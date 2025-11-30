@@ -215,7 +215,7 @@ function parse_kir(data) {
             dobave_zunaj_slo: parse_float(worksheet['AD' + row]),       // P27
             opombe: parse_string(worksheet['AE' + row]),                // P28
             samoprijava_obdobje: parse_string(worksheet['AF' + row]),   // OBDOBJE88
-            samoprijava_davek: parse_string(worksheet['AG' + row]),     // DAVEK88
+            samoprijava_davek: parse_float(worksheet['AG' + row]),     // DAVEK88
         });
 
         row++;
@@ -259,7 +259,7 @@ function parse_kpr(data) {
             pavsal_8: parse_float(worksheet['X' + row]),                // P21
             opombe: parse_string(worksheet['Y' + row]),                 // P22
             samoprijava_obdobje: parse_string(worksheet['Z' + row]),    // OBDOBJE88
-            samoprijava_davek: parse_string(worksheet['AA' + row]),     // DAVEK88
+            samoprijava_davek: parse_float(worksheet['AA' + row]),     // DAVEK88
         });
 
         row++;
@@ -452,7 +452,7 @@ function generate_furs_xml(export_data) {
         } else {
             if (
                 !emptyValuesToOmit.includes(path + '.' + parentTag) ||
-                (data && (typeof data.value === "string" && data.value.trim()))
+                ((typeof data !== "string" && data) || (typeof data === "string" && data.trim()))
             ) {
                 const escaped_data = escapeXml(data);
                 xml += `${indent}<${parentTagOpen}>${escaped_data}</${parentTag}>\n`;
