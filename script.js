@@ -113,6 +113,49 @@ function parse_date(raw) {
     return parse_simple_value(raw);
 }
 
+/**
+ * Format a date for FURS export. Throws a clear Slovenian error when the
+ * value is missing or not a valid Date (e.g. empty/stray Excel rows).
+ */
+function format_furs_date(value, fieldLabel) {
+    if (value == null || value === '') {
+        throw new Error('manjkajoč ' + fieldLabel);
+    }
+
+    if (!(value instanceof Date) || isNaN(value.getTime())) {
+        var shown = (typeof value === 'string' || typeof value === 'number')
+            ? String(value)
+            : (value && value.toString ? value.toString() : String(value));
+        throw new Error('neveljaven ' + fieldLabel + ' (' + shown + ')');
+    }
+
+    return formatDate(value, "yyyy-MM-dd");
+}
+
+function describe_list_row_error(listName, row, error) {
+    var zap = row.zaporedna && row.zaporedna.value;
+    var locationParts = [];
+
+    if (row.excel_row != null) {
+        locationParts.push('Excel vrstica ' + row.excel_row);
+    }
+    if (zap) {
+        locationParts.push('zaporedna številka ' + zap);
+    } else {
+        locationParts.push('brez veljavne zaporedne številke');
+    }
+
+    var message = 'Napaka v ' + listName + ' (' + locationParts.join(', ') + '): ' + error.message;
+
+    // Empty/whitespace cells in column A parse as 0 and often come with missing dates.
+    if (!zap) {
+        message += '. Preverite, da ni praznih vrstic (npr. celica v stolpcu A s samo presledkom) ' +
+            'in da so vsi obvezni datumi izpolnjeni.';
+    }
+
+    return new Error(message);
+}
+
 function parse_float(raw) {
     if (!raw) {
         return {value: 0.0, raw: 0.0};
@@ -183,6 +226,7 @@ function parse_kir(data) {
     var row = 10;
     while (worksheet['A' + row]) {
         parsed_data.push({
+            excel_row: row,
             zaporedna: parse_integer(worksheet['A' + row]),             // ZAPST
             datum_knjizenja: parse_date(worksheet['B' + row]),          // P2
             stevilka_racuna: parse_integer(worksheet['C' + row]),       // P3
@@ -221,7 +265,7 @@ function parse_kir(data) {
         row++;
     }
 
-    parsed_data.sort((a, b) => a.zaporedna - b.zaporedna);
+    parsed_data.sort((a, b) => a.zaporedna.value - b.zaporedna.value);
     return parsed_data;
 }
 
@@ -233,6 +277,7 @@ function parse_kpr(data) {
     var row = 11;
     while (worksheet['A' + row]) {
         parsed_data.push({
+            excel_row: row,
             zaporedna: parse_integer(worksheet['A' + row]),             // ZAPST
             datum_knjizenja: parse_date(worksheet['B' + row]),          // P2
             stevilka_racuna: parse_integer(worksheet['C' + row]),       // P3
@@ -265,7 +310,7 @@ function parse_kpr(data) {
         row++;
     }
 
-    parsed_data.sort((a, b) => a.zaporedna - b.zaporedna);
+    parsed_data.sort((a, b) => a.zaporedna.value - b.zaporedna.value);
     return parsed_data;
 }
 
@@ -308,8 +353,8 @@ function generate_furs_json(header, kir, kpr) {
                 //TUJEC1: "AB",
                 //TUJEC2: "string",
                 // TODO How can we only get this once?
-                OBDOBJE_OD: formatDate(header.obdobjeOd.value, "yyyy-MM-dd"),
-                OBDOBJE_DO: formatDate(header.obdobjeDo.value, "yyyy-MM-dd"),
+                OBDOBJE_OD: format_furs_date(header.obdobjeOd.value, 'datum obdobja od (Glava B3)'),
+                OBDOBJE_DO: format_furs_date(header.obdobjeDo.value, 'datum obdobja do (Glava B4)'),
                 KIR: kir.length > 0,
                 KPR: kpr.length > 0,
                 VRACILO: header.vracilo.value,
@@ -335,9 +380,9 @@ function generate_furs_json(header, kir, kpr) {
                 furs_json.Lista_KIR.KIR.push({
                     ZAPST: row.zaporedna.value,
                     OBDOBJE: row.obdobje.value,
-                    P2: formatDate(row.datum_knjizenja.value, "yyyy-MM-dd"),
+                    P2: format_furs_date(row.datum_knjizenja.value, 'datum knjiženja (P2)'),
                     P3: row.stevilka_racuna.value,
-                    P4: formatDate(row.datum_racuna.value, "yyyy-MM-dd"),
+                    P4: format_furs_date(row.datum_racuna.value, 'datum računa (P4)'),
                     P5: row.podjetje.value,
                     P6: row.koda_drzave.value,
                     P6DS: row.davcna.value,
@@ -368,7 +413,7 @@ function generate_furs_json(header, kir, kpr) {
                     DAVEK88: row.samoprijava_davek.value,
                 });
             } catch (error) {
-                throw new Error('Napaka v KIR (zaporedna številka ' + row.zaporedna.value + '): ' + error.message);
+                throw describe_list_row_error('KIR', row, error);
             }
         })
     }
@@ -381,10 +426,10 @@ function generate_furs_json(header, kir, kpr) {
                 furs_json.Lista_KPR.KPR.push({
                     ZAPST: row.zaporedna.value,
                     OBDOBJE: row.obdobje.value,
-                    P2: formatDate(row.datum_knjizenja.value, "yyyy-MM-dd"),
+                    P2: format_furs_date(row.datum_knjizenja.value, 'datum knjiženja (P2)'),
                     P3: row.stevilka_racuna.value,
-                    P4: formatDate(row.datum_prejema.value, "yyyy-MM-dd"),
-                    P5: formatDate(row.datum_racuna.value, "yyyy-MM-dd"),
+                    P4: format_furs_date(row.datum_prejema.value, 'datum prejema (P4)'),
+                    P5: format_furs_date(row.datum_racuna.value, 'datum računa (P5)'),
                     P6: row.podjetje.value,
                     P7: row.koda_drzave.value,
                     P7DS: row.davcna.value,
@@ -408,7 +453,7 @@ function generate_furs_json(header, kir, kpr) {
                     DAVEK88: row.samoprijava_davek.value,
                 });
             } catch (error) {
-                throw new Error('Napaka v KPR (zaporedna številka ' + row.zaporedna.value + '): ' + error.message);
+                throw describe_list_row_error('KPR', row, error);
             }
         });
     }
